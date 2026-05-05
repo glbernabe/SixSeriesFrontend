@@ -29,7 +29,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LoginComponent (state: LoginState,
-                    onEmailChange: (String) -> Unit,
+                    onUsernameChange: (String) -> Unit,
                     onPasswordChange: (String) -> Unit,
                     onLoginClick: () -> Unit,
                     onCancel: () -> Unit)
@@ -56,8 +56,8 @@ fun LoginComponent (state: LoginState,
 
             // Campo de Email
             OutlinedTextField(
-                value = state.email,
-                onValueChange = { onEmailChange(it) },
+                value = state.username,
+                onValueChange = { onUsernameChange(it) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 //isError = state.emailError != null,

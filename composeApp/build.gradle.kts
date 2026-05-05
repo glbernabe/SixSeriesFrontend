@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
-
+    alias(libs.plugins.kotlin.plugin.serialization)
 }
 
 kotlin {
@@ -69,8 +69,8 @@ kotlin {
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-layout:1.2.0")
             implementation("org.jetbrains.compose.material3.adaptive:adaptive-navigation:1.2.0")
             //viewmodel en koin
-            implementation("io.insert-koin:koin-core-viewmodel:2.3.0")
-            implementation("io.insert-koin:koin-compose-viewmodel:2.3.0")
+            //implementation("io.insert-koin:koin-core-viewmodel:2.3.0")
+            //implementation("io.insert-koin:koin-compose-viewmodel:2.3.0")
 
 
             //seleccion de ficheros

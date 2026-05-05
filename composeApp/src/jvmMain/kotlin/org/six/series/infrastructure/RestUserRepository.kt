@@ -8,6 +8,7 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.submitForm
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
@@ -29,43 +30,50 @@ class RestUserRepository(
     private val url: String,
     private val cliente: HttpClient,
     private val tokenStorage: TokenStorage
-): IUserRepository {
+) : IUserRepository {
 
     override suspend fun loginUser(user: UserLogin) {
-        return try {
-            // Intentamos deserializar la respuesta correctamente
-            val tokens = cliente.post("$url/login") {
-                contentType(ContentType.Application.Json)
-                setBody(user)
-            }.body<Map<String, String>>() // Respuesta esperada de tokens
-
-            // Guardamos los tokens de forma segura
-            tokenStorage.saveTokens(
-                accessToken = tokens["access_token"] ?: "",
-                refreshToken = tokens["refresh_token"] ?: ""
+        try {
+            val response = cliente.submitForm(
+                url = "$url/login/",
+                formParameters = parameters {
+                    append("username", user.username)
+                    append("password", user.password)
+                }
             )
 
+            // IMPORTANTE: Primero debemos extraer el cuerpo de la respuesta
+            if (response.status == HttpStatusCode.OK) {
+                //TokenResponse(access_token, refresh_token)
+                val tokens = response.body<Map<String, String>>()
 
-        } catch (e: ClientRequestException) {
-            // Este error se lanza cuando el servidor devuelve 4xx
-            val text = e.response.bodyAsText()
-            val errorResponse = try {
-                Json.decodeFromString<LoginDetailError>(text)
-            } catch (_: Exception) {
-                null
+                tokenStorage.saveTokens(
+                    accessToken = tokens["access_token"] ?: "",
+                    refreshToken = tokens["refresh_token"] ?: ""
+                )
+            } else {
+                // Si no es 200 OK, lanzamos manualmente para que lo capture el catch de abajo
+                throw ClientRequestException(response, "Error en login")
             }
 
-            // Lanzamos una excepción con el mensaje del servidor, si existe
-            val message = errorResponse?.detalles?.joinToString { it.message } ?: text
+        } catch (e: ClientRequestException) {
+            val text = e.response.bodyAsText()
+            // Aquí manejamos el error 422 o 401 del servidor
+            val message = try {
+                val errorResponse = Json.decodeFromString<LoginDetailError>(text)
+                errorResponse.detalles.joinToString { it.message }
+            } catch (_: Exception) {
+                "Credenciales incorrectas o error de formato"
+            }
             throw IllegalArgumentException(message)
-        } catch (e: ServerResponseException) {
-            // Error 5xx
-            throw IllegalStateException("Error en el servidor: ${e.response.status}")
+        } catch (e: Exception) {
+            // Captura errores de red o errores 5xx
+            throw IllegalStateException("No se pudo conectar con el servidor")
         }
     }
 
     override suspend fun signupUser(user: UserRegister) {
-        cliente.post("$url/signup") {
+        cliente.post("$url/signup/") {
             contentType(ContentType.Application.Json)
             setBody(user)
         }.body<Unit>()

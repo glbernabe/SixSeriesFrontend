@@ -72,15 +72,15 @@ class RegisterFormViewModel(
 
     //Válida si hay en la contraseña una de esas caracteristicas, y si no cumple con una, suelta un eerror
     private fun validatePassword(password: String): String? {
-        if (password.length !in 6..32) return "Debe tener entre 6 y 32 caracteres"
-
-        val upper = password.any { it.isUpperCase() }
-        val lower = password.any { it.isLowerCase() }
-        val digit = password.any { it.isDigit() }
-        val special = password.any { !it.isLetterOrDigit() }
-
-        return if (upper && lower && digit && special) null
-        else "Debe incluir mayúscula, minúscula, número y carácter especial"
+        if (password.length !in 3..32) return "Debe tener entre 6 y 32 caracteres"
+        return null
+//        val upper = password.any { it.isUpperCase() }
+//        val lower = password.any { it.isLowerCase() }
+//        val digit = password.any { it.isDigit() }
+//        val special = password.any { !it.isLetterOrDigit() }
+//
+//        return if (upper && lower && digit && special) null
+//        else "Debe incluir mayúscula, minúscula, número y carácter especial"
     }
 
     private fun validForm() {

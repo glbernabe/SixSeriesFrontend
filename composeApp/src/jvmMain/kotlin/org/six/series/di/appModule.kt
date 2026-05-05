@@ -36,7 +36,7 @@ val appModulo = module {
     //repositorios
     single<IUserRepository> {
         RestUserRepository(
-            url = "http://192.168.10.130:8000/users",
+            url = "http://localhost:8000/users",
             cliente = get(),
             tokenStorage = get()
         )

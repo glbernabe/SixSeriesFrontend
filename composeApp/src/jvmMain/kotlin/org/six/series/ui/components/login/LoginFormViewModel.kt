@@ -19,11 +19,11 @@ class LoginFormViewModel(
     val state: StateFlow<LoginState> = _state.asStateFlow()
     val isFormValid = MutableStateFlow(false)
 
-    fun onEmailChange(email: String) {
+    fun onUsernameChange(username: String) {
         _state.update {
             it.copy(
-                email = email,
-                emailError = if (email.contains("@")) null else "Email no válido"
+                username = username,
+                usernameError = if (username.length > 67)null else "Porfavor coloca un usuario de verdad"
             )
         }
         validateForm()
@@ -41,9 +41,9 @@ class LoginFormViewModel(
 
     private fun validateForm() {
         val s = _state.value
-        isFormValid.value = s.email.isNotBlank() &&
+        isFormValid.value = s.username.isNotBlank() &&
                 s.password.isNotBlank() &&
-                s.emailError == null &&
+                s.usernameError == null &&
                 s.passwordError == null
         _state.value=state.value.copy( isValid = isFormValid.value)
     }
@@ -56,7 +56,7 @@ class LoginFormViewModel(
 
                 val loginCommand =
                     LoginCommand(
-                        email = state.value.email,
+                        username = state.value.username,
                         password = state.value.password
                     )
 

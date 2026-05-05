@@ -44,7 +44,7 @@ fun LoginScreen(
     ) {
         LoginComponent(
             state = state,
-            onEmailChange = viewModel::onEmailChange,
+            onUsernameChange = viewModel::onUsernameChange,
             onPasswordChange = viewModel::onPasswordChange,
             onLoginClick = { viewModel.login() },
             onCancel = onCancel

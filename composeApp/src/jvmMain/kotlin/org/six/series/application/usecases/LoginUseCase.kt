@@ -8,13 +8,13 @@ class LoginUseCase (
     private val userRepository: IUserRepository
 ) {
     suspend fun login(command: LoginCommand): Result<Unit> {
-        if (command.email.isBlank() || command.password.isBlank()) {
+        if (command.username.isBlank() || command.password.isBlank()) {
             return Result.failure(IllegalArgumentException("Están vacíos los campos"))
         }
 
 
         val userLogin = UserLogin(
-            email = command.email,
+            username = command.username,
             password = command.password
         )
 
