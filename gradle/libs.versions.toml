@@ -44,7 +44,6 @@ ktor-server-statuspage = { module = "io.ktor:ktor-server-status-pages", version.
 ktor-server-validator = { module = "io.ktor:ktor-server-request-validation", version.ref = "ktor" }
 
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
-#postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 

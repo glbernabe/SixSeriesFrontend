@@ -1,7 +1,6 @@
 package org.six.series.di
 
 import org.six.series.model.IUserRepository
-import ies.sequeros.dam.pmdm.gestionperifl.ui.appsettings.AppSettings
 import org.six.series.ui.components.register.RegisterFormViewModel
 import org.six.series.ui.components.login.LoginFormViewModel
 import org.six.series.ui.appsettings.AppViewModel
@@ -12,6 +11,7 @@ import org.koin.dsl.module
 import org.six.series.application.usecases.LoginUseCase
 import org.six.series.application.usecases.RegisterUseCase
 import org.six.series.infrastructure.RestUserRepository
+import org.six.series.ui.appsettings.AppSettings
 
 
 val appModulo = module {
@@ -42,6 +42,10 @@ val appModulo = module {
         )
     }
 
+    single {
+        AppSettings(databasePath = "app_settings.preferences_pb")
+    }
+
     /**
     capa de aplicación
     el sesion manager,
@@ -52,7 +56,6 @@ val appModulo = module {
     /**
     capa de presentación
      **/
-    single { AppSettings() }
     viewModel { AppViewModel(get(), get(), get()) }
     viewModel { LoginFormViewModel(get()) }
 

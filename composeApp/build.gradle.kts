@@ -21,6 +21,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation("androidx.datastore:datastore-preferences:1.1.1")
             //implementation(projects.shared)
 
             //corrutinas.

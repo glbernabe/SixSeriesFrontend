@@ -1,5 +1,7 @@
 package org.six.series
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -7,35 +9,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.graphics.Color
 
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF00A461), //Color(0xFF0061A4),
-    onPrimary = Color.White,
-    secondary = Color(0xFF006D3E),
-    onSecondary = Color.White,
-    background = Color(0xFFFDFDFD),
-    onBackground = Color(0xFF1C1B1F)
+// ALL THE COLORS OF THE PROFILES
+val ProfilePink = Color(0xFFE2A9F1)
+val ProfileRed = Color(0xFFFF3131)
+val ProfileBlue = Color(0xFF004AAD)
+val ProfileGray = Color(0xFF6A6A69)
+val ProfilePurple = Color(0xFFCE16FF)
+val ProfileBlack = Color(0xFF000000)
+val ProfileYellow = Color(0xFFFFDE59)
+val ProfileGreen = Color(0xFF7ED957)
 
-)
-
-private val DarkColors = darkColorScheme(
-    primary = Color(0xFF42D192),//0xFF9CCAFF),
-    onPrimary = Color(0xFF003258),
-    secondary = Color(0xFF8CDDA9),
-    onSecondary = Color(0xFF00391F),
-    background = Color(0xFF1C1B1F),
-    onBackground = Color(0xFFE5E1E6),
-)
-
+fun profileScheme(baseColor: Color): ColorScheme {
+    return lightColorScheme(
+        primary = baseColor,
+        onPrimary = if (baseColor == Color.Black) Color.White else Color.Black, // Contrast ajustment
+        secondary = baseColor.copy(alpha = 0.7f),
+        onSecondary = Color.White,
+        background = Color(0xFFFDFDFD),
+        onBackground = Color(0xFF1C1B1F),
+        surface = Color(0xFFFDFDFD),
+        onSurface = Color(0xFF1C1B1F)
+        // Add more if it's viable
+    )
+}
 @Composable
 fun AppTheme(
-    darkTheme: State<Boolean>,
+    selectedProfileColor: Color,
     content: @Composable () -> Unit
 ) {
-    val colors = if (darkTheme.value) DarkColors else LightColors
+    val colors = profileScheme(selectedProfileColor)
 
     MaterialTheme(
         colorScheme = colors,
-
         content = content
     )
 }

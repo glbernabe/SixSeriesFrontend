@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import org.six.series.AppRoute
 import org.six.series.application.dto.RefreshDto
 import org.six.series.infrastructure.TokenJwt
-import ies.sequeros.dam.pmdm.gestionperifl.ui.appsettings.AppSettings
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -13,8 +12,10 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.six.series.infrastructure.TokenStorage
 
@@ -24,9 +25,19 @@ class AppViewModel(
     private val client: HttpClient
 ) : ViewModel() {
 
-    val isDarkMode = settings.isDarkMode
+    // The UI observes and changes automatically
+    val currentHexColor = settings.currentHexColor.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AppSettings.DEFAULT_COLOR
+    )
 
-    // Esto es para saber a donde hay que reindicar al usuario
+    // This function is to change the color of the pfp
+    fun updateAppColor(colorHex: Long) {
+        viewModelScope.launch {
+            settings.updateColor(colorHex)
+        }
+    }
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination: StateFlow<String?> = _startDestination
 
@@ -42,16 +53,16 @@ class AppViewModel(
             if (!access.isNullOrEmpty()) {
                 val token = TokenJwt(access)
                 if (token.isSessionValid()) {
-                    // Token válido → ir a org.six.series.main
+                    // Valid Token
                     _startDestination.value = AppRoute.main
                 } else if (!refresh.isNullOrEmpty()) {
-                    // Token expirado → intentar refrescar
+                    // Access token expired -> Refresh
                     val newTokens = tryRefreshToken(refresh)
                     if (newTokens != null) {
                         tokenStorage.saveTokens(newTokens.access_token!!, newTokens.refresh_token!!)
                         _startDestination.value = AppRoute.main
                     } else {
-                        // No se pudo refrescar → ir a login
+                        // Refresh token expired -> Login again
                         _startDestination.value = AppRoute.login
                     }
                 } else {
@@ -62,7 +73,7 @@ class AppViewModel(
             }
         }
     }
-    // Función para llamar al endpoint de refresh
+    // Call to the endpoint to refresh
     private suspend fun tryRefreshToken(refreshToken: String): RefreshDto? {
         return try {
             client.post("http://localhost:8080/api/public/refresh") {
@@ -73,10 +84,4 @@ class AppViewModel(
             null
         }
     }
-
-    // Opciones de los temas
-    fun toggleTheme() = settings.toggleDarkMode()
-    fun setDarkMode() = settings.setDarkMode()
-    fun setLightMode() = settings.setLightMode()
-    fun switchMode() = settings.toggleDarkMode()
 }

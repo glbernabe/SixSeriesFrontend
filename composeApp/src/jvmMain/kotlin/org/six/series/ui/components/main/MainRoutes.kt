@@ -1,9 +1,8 @@
 package org.six.series.ui.components.main
 
 object MainRoutes {
-    const val Perfil = "perfil"
-    const val CambiarPassword = "cambiar_password"
-    const val CambiarImagen = "cambiar_imagen"
-    const val ModificarUsuario = "modificar_usuario"
-    const val BorrarUsuario = "borrar_usuario"
+    const val Principal = "main_page"
+    const val Movies = "movies"
+    const val Series = "series"
+    const val Profile = "profile"
 }

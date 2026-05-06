@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,7 +27,9 @@ fun App() {
     val navController = rememberNavController()
     val startDestination by appViewModel.startDestination.collectAsState()
 
-    // Si aún no sabemos a dónde ir, mostrar cargando
+    // We obtain the Stateflow of the color and change it to State of Compose
+    val appColorLong by appViewModel.currentHexColor.collectAsState()
+
     if (startDestination == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -37,15 +40,18 @@ fun App() {
         return
     }
 
-    AppTheme(appViewModel.isDarkMode.collectAsState()) {
+    // Transform the State to a Color
+    AppTheme(
+        selectedProfileColor = Color(appColorLong)
+    ) {
         Column(
             modifier = Modifier
+                // Depending on the profile, the color of the app colors changes
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .safeContentPadding()
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             NavHost(
                 navController = navController,
                 startDestination = startDestination!!
