@@ -5,4 +5,6 @@ object MainRoutes {
     const val Movies = "movies"
     const val Series = "series"
     const val Profile = "profile"
+    const val Search = "search"
+    const val Genres = "genres"
 }

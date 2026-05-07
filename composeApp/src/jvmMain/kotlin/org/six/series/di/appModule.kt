@@ -16,10 +16,7 @@ import org.six.series.ui.appsettings.AppSettings
 
 val appModulo = module {
 
-    /**
-     * infraestructura
-     */
-    //almacenamiento del token
+    // Token Storage
     single { TokenStorage(get()) }
 
     single {
@@ -28,12 +25,7 @@ val appModulo = module {
         )
     }
 
-
-
-
-
-
-    //repositorios
+    // Repository
     single<IUserRepository> {
         RestUserRepository(
             url = "http://localhost:8000/users",
@@ -46,16 +38,6 @@ val appModulo = module {
         AppSettings(databasePath = "app_settings.preferences_pb")
     }
 
-    /**
-    capa de aplicación
-    el sesion manager,
-    el origen de los datos, se encarga de transforar el tokenstorage para trabajar con user
-    casos de uso
-     **/
-
-    /**
-    capa de presentación
-     **/
     viewModel { AppViewModel(get(), get(), get()) }
     viewModel { LoginFormViewModel(get()) }
 

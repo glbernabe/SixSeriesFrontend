@@ -42,7 +42,7 @@ class RestUserRepository(
                 }
             )
 
-            // IMPORTANTE: Primero debemos extraer el cuerpo de la respuesta
+            // Get the body of the response
             if (response.status == HttpStatusCode.OK) {
                 //TokenResponse(access_token, refresh_token)
                 val tokens = response.body<Map<String, String>>()
@@ -52,13 +52,13 @@ class RestUserRepository(
                     refreshToken = tokens["refresh_token"] ?: ""
                 )
             } else {
-                // Si no es 200 OK, lanzamos manualmente para que lo capture el catch de abajo
+                // If it's not OK then we'll throw and exception
                 throw ClientRequestException(response, "Error en login")
             }
 
         } catch (e: ClientRequestException) {
             val text = e.response.bodyAsText()
-            // Aquí manejamos el error 422 o 401 del servidor
+            // Servers errors capture
             val message = try {
                 val errorResponse = Json.decodeFromString<LoginDetailError>(text)
                 errorResponse.detalles.joinToString { it.message }
@@ -67,7 +67,7 @@ class RestUserRepository(
             }
             throw IllegalArgumentException(message)
         } catch (e: Exception) {
-            // Captura errores de red o errores 5xx
+            // Network errors
             throw IllegalStateException("No se pudo conectar con el servidor")
         }
     }
