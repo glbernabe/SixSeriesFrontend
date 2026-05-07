@@ -59,7 +59,7 @@ fun RegisterScreen(
 
         // Botón simple para volver a Login
         OutlinedButton(
-            onClick = { navController.navigate(AppRoute.login) },
+            onClick = { navController.navigate(AppRoute.Login) },
             modifier = Modifier.height(40.dp)
         ) {
             Text("¿Ya tienes cuenta? Inicia sesión", fontSize = 14.sp)

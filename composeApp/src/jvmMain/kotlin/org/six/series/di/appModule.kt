@@ -8,6 +8,7 @@ import org.six.series.infrastructure.TokenStorage
 import org.six.series.infrastructure.ktor.createHttpClient
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import org.six.series.application.usecases.LogOutUseCase
 import org.six.series.application.usecases.LoginUseCase
 import org.six.series.application.usecases.RegisterUseCase
 import org.six.series.infrastructure.RestUserRepository
@@ -36,6 +37,10 @@ val appModulo = module {
 
     single {
         AppSettings(databasePath = "app_settings.preferences_pb")
+    }
+
+    single {
+        LogOutUseCase(userRepository = get())
     }
 
     viewModel { AppViewModel(get(), get(), get()) }

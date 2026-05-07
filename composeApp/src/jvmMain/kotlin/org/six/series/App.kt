@@ -56,24 +56,24 @@ fun App() {
                 navController = navController,
                 startDestination = startDestination!!
             ) {
-                composable(AppRoute.login) {
+                composable(AppRoute.Login) {
                     LoginScreen(
                         navController = navController,
-                        onLogin = { navController.navigate(AppRoute.main) },
+                        onLogin = { navController.navigate(AppRoute.Main) },
                         onCancel = { /* TODO: cerrar app o limpiar */ }
                     )
                 }
 
-                composable(AppRoute.register) {
+                composable(AppRoute.Register) {
                     RegisterScreen(
                         navController = navController,
-                        onRegister = { navController.navigate(AppRoute.login) },
+                        onRegister = { navController.navigate(AppRoute.Login) },
                         onCancel = { navController.popBackStack() }
                     )
                 }
 
-                composable(AppRoute.main) {
-                    MainScreen()
+                composable(AppRoute.Main) {
+                    MainScreen(navController)
                 }
             }
         }

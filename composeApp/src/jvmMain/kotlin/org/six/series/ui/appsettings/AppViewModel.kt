@@ -54,22 +54,22 @@ class AppViewModel(
                 val token = TokenJwt(access)
                 if (token.isSessionValid()) {
                     // Valid Token
-                    _startDestination.value = AppRoute.main
+                    _startDestination.value = AppRoute.Main
                 } else if (!refresh.isNullOrEmpty()) {
                     // Access token expired -> Refresh
                     val newTokens = tryRefreshToken(refresh)
                     if (newTokens != null) {
                         tokenStorage.saveTokens(newTokens.access_token!!, newTokens.refresh_token!!)
-                        _startDestination.value = AppRoute.main
+                        _startDestination.value = AppRoute.Main
                     } else {
                         // Refresh token expired -> Login again
-                        _startDestination.value = AppRoute.login
+                        _startDestination.value = AppRoute.Login
                     }
                 } else {
-                    _startDestination.value = AppRoute.login
+                    _startDestination.value = AppRoute.Login
                 }
             } else {
-                _startDestination.value = AppRoute.login
+                _startDestination.value = AppRoute.Login
             }
         }
     }

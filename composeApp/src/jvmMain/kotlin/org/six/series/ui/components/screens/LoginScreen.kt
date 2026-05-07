@@ -54,7 +54,7 @@ fun LoginScreen(
 
         // Botón simple para ir a Register
         OutlinedButton(
-            onClick = { navController.navigate(AppRoute.register) },
+            onClick = { navController.navigate(AppRoute.Register) },
             modifier = Modifier.height(40.dp)
         ) {
             Text("¿No tienes cuenta? Regístrate")
