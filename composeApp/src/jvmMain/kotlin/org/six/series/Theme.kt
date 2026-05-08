@@ -1,12 +1,11 @@
 package org.six.series
 
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 
@@ -32,8 +31,11 @@ fun Color.contrastingColor(): Color {
 
 // --- 3. DYNAMIC SCHEME GENERATOR ---
 /**
- * Generates a full Material 3 ColorScheme based on a specific profile color.
- * This ensures the entire app (buttons, backgrounds, texts) remains cohesive.
+ * Generates a dynamic ColorScheme based on a single base color.
+ * Documentation:
+ * - primary: Uses the base color for key UI elements like Buttons and active states.
+ * - onPrimary: Uses the contrast logic to ensure text/icons are visible over the primary color.
+ * - surfaceVariant: Used by Cards and TextFields; here it's kept neutral but can be tinted.
  */
 fun profileScheme(baseColor: Color): ColorScheme {
     val onPrimaryColor = baseColor.contrastingColor()
@@ -42,26 +44,45 @@ fun profileScheme(baseColor: Color): ColorScheme {
         primary = baseColor,
         onPrimary = onPrimaryColor,
 
-        // Subtle containers based on the profile color for background elements
+        // Primary Container: Used for less prominent highlights
         primaryContainer = baseColor.copy(alpha = 0.15f),
         onPrimaryContainer = baseColor,
 
+        // Secondary: Used for less prominent components (70% opacity of base)
         secondary = baseColor.copy(alpha = 0.7f),
         onSecondary = Color.White,
 
-        // Background and surface colors
+        // Main Backgrounds: Standard near-white for clean contrast
         background = Color(0xFFFDFDFD),
         onBackground = Color(0xFF1C1B1F),
         surface = Color(0xFFFDFDFD),
         onSurface = Color(0xFF1C1B1F),
 
-        // Surface variant for elements like TextFields or Cards
-        surfaceVariant = baseColor.copy(alpha = 0.05f),
+        // Surface Variant: Default background for Cards and OutlinedTextFields
+        // Note: Currently set to a neutral dark tint with 5% alpha
+        surfaceVariant = Color(0xFF1C1B1F).copy(alpha = 0.05f),
         onSurfaceVariant = Color(0xFF49454F),
 
-        // Standard Material 3 Error colors
+        // Error states
         error = Color(0xFFB3261E),
         onError = Color.White
+    )
+}
+
+/**
+ * Composable function to retrieve themed button colors.
+ * Documentation:
+ * - containerColor: Pulls 'primary' from the current theme (baseColor).
+ * - contentColor: Pulls 'onPrimary' from the current theme (contrast color).
+ * - disabled states: Uses 'onSurface' with Material standard alpha values (12% and 38%).
+ */
+@Composable
+fun profileButtonColors(): ButtonColors {
+    return ButtonDefaults.buttonColors(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     )
 }
 

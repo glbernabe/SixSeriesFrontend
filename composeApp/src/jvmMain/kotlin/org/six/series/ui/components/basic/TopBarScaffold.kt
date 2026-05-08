@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +36,7 @@ import sixseries.composeapp.generated.resources.Res
 import sixseries.composeapp.generated.resources.ic_bullet_List
 import sixseries.composeapp.generated.resources.ic_magnifying_Glass
 import sixseries.composeapp.generated.resources.ic_user_Circle_Single
+import java.awt.Cursor
 
 
 // ALL THE ICONS FOR THE UI ON THE TOP BAR
@@ -48,14 +51,17 @@ val navItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdaptiveTopBar(navController: NavController) {
-    // --- 1. INJECTION & STATES ---
+fun AdaptiveTopBar(
+    navController: NavController,
+    rootNavController: NavController
+) {
+    // --- INJECTION & STATES ---
     val logoutUseCase = koinInject<LogOutUseCase>()
     val scope = rememberCoroutineScope()
     val contentColor = MaterialTheme.colorScheme.onPrimary
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // --- 2. TEXT STYLES ---
+    // --- TEXT STYLES ---
     val logoStyle = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontSize = 32.sp,
@@ -81,7 +87,6 @@ fun AdaptiveTopBar(navController: NavController) {
     )
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        // --- 3. MAIN NAVIGATION BAR ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -103,7 +108,6 @@ fun AdaptiveTopBar(navController: NavController) {
 
             // NAVIGATION ITEMS
             navItems.forEach { item ->
-                // Spacer logic: pushes items after the magnifying glass to the right
                 if (item.icon == Res.drawable.ic_magnifying_Glass) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -115,25 +119,25 @@ fun AdaptiveTopBar(navController: NavController) {
                         .clickable {
                             // --- CLICK LOGIC ---
                             if (item.icon == Res.drawable.ic_user_Circle_Single) {
-                                // Action: Logout
+                                // Execution of logout through the use case and navigation to root Login
                                 scope.launch {
                                     logoutUseCase.logout()
                                         .onSuccess {
                                             errorMessage = "Sesión cerrada correctamente"
-                                            navController.navigate(AppRoute.Login){
+                                            rootNavController.navigate(AppRoute.Login){
                                                 popUpTo(0)
                                             }
-
                                         }
                                         .onFailure {
                                             errorMessage = "Error al intentar cerrar sesión"
                                         }
                                 }
                             } else {
-                                // Action: Standard Navigation
+                                // Standard internal navigation between feature routes
                                 try {
                                     navController.navigate(item.route) {
                                         launchSingleTop = true
+                                        restoreState = true
                                     }
                                 } catch (ex: Exception) {
                                     errorMessage = "No se pudo abrir ${item.label ?: "la página"}"
@@ -146,7 +150,6 @@ fun AdaptiveTopBar(navController: NavController) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        // Icon Render
                         if (item.icon != null) {
                             Icon(
                                 painter = painterResource(item.icon),
@@ -161,7 +164,6 @@ fun AdaptiveTopBar(navController: NavController) {
                             )
                         }
 
-                        // Label Render
                         if (item.icon != null && !item.label.isNullOrEmpty()) {
                             Spacer(Modifier.width(8.dp))
                         }
@@ -177,7 +179,7 @@ fun AdaptiveTopBar(navController: NavController) {
             }
         }
 
-        // --- 4. ERROR OVERLAY ---
+        // --- ERROR OVERLAY ---
         if (errorMessage != null) {
             Box(
                 modifier = Modifier
