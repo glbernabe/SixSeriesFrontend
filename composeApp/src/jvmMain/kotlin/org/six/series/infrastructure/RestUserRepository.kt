@@ -1,12 +1,11 @@
 package org.six.series.infrastructure
 
-import org.six.series.model.IUserRepository
-import org.six.series.model.UserLogin
-import org.six.series.model.UserRegister
+import org.six.series.model.user.IUserRepository
+import org.six.series.model.user.UserLogin
+import org.six.series.model.user.UserRegister
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.statement.bodyAsText

@@ -1,4 +1,4 @@
-package org.six.series.ui.components.basic
+package org.six.series.ui.components.basic.carousel
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -15,9 +15,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.six.series.ui.components.basic.carousel.CarouselInfoPanel
-import org.six.series.ui.components.basic.carousel.CarouselNavigationButton
-import org.six.series.ui.components.basic.carousel.CarouselPoster
 
 @Composable
 fun CarouselMovies() {
@@ -41,7 +38,9 @@ fun CarouselMovies() {
     ) {
 
         // The modifiers are passed here because of the inheritance
-        CarouselNavigationButton(onClick = { })
+        CarouselNavigationButton(onClick = {
+
+        })
 
         CarouselInfoPanel(
             itemTextStyle = itemTextStyle,

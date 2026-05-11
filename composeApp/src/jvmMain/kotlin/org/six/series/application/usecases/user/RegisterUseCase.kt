@@ -1,9 +1,9 @@
-package org.six.series.application.usecases
+package org.six.series.application.usecases.user
 
 import org.six.series.application.commands.RegisterCommand
 
-import org.six.series.model.IUserRepository
-import org.six.series.model.UserRegister
+import org.six.series.model.user.IUserRepository
+import org.six.series.model.user.UserRegister
 
 class RegisterUseCase(private val userRepository: IUserRepository) {
     // Si ocurre un error devuelve el texto de abajo, si no, el UI propio se encargará de mostrar un mensaje

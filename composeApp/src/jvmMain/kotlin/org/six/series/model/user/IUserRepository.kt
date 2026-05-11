@@ -1,4 +1,4 @@
-package org.six.series.model
+package org.six.series.model.user
 
 interface IUserRepository {
     suspend fun loginUser(user: UserLogin)

@@ -3,7 +3,7 @@ package org.six.series.ui.components.register
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import org.six.series.application.commands.RegisterCommand
-import org.six.series.application.usecases.RegisterUseCase
+import org.six.series.application.usecases.user.RegisterUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

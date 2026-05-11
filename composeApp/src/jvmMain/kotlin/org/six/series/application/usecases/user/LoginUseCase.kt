@@ -1,8 +1,8 @@
-package org.six.series.application.usecases
+package org.six.series.application.usecases.user
 
-import org.six.series.model.IUserRepository
+import org.six.series.model.user.IUserRepository
 import org.six.series.application.commands.LoginCommand
-import org.six.series.model.UserLogin
+import org.six.series.model.user.UserLogin
 
 class LoginUseCase (
     private val userRepository: IUserRepository

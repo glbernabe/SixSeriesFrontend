@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,8 +15,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -29,14 +25,13 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.six.series.AppRoute
-import org.six.series.application.usecases.LogOutUseCase
+import org.six.series.application.usecases.user.LogOutUseCase
 import org.six.series.model.NavigationItem
 import org.six.series.ui.components.main.MainRoutes
 import sixseries.composeapp.generated.resources.Res
 import sixseries.composeapp.generated.resources.ic_bullet_List
 import sixseries.composeapp.generated.resources.ic_magnifying_Glass
 import sixseries.composeapp.generated.resources.ic_user_Circle_Single
-import java.awt.Cursor
 
 
 // ALL THE ICONS FOR THE UI ON THE TOP BAR

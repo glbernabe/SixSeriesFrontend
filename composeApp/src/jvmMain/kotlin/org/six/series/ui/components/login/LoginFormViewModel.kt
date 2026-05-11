@@ -3,7 +3,7 @@ package org.six.series.ui.components.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import org.six.series.application.commands.LoginCommand
-import org.six.series.application.usecases.LoginUseCase
+import org.six.series.application.usecases.user.LoginUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

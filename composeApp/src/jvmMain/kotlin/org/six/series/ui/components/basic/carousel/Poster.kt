@@ -6,15 +6,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 
 @Composable
 fun CarouselPoster(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+
 ) {
     Column(
         modifier = modifier.fillMaxHeight()
@@ -26,6 +30,11 @@ fun CarouselPoster(
                 .border(width = 2.dp, color = Color.White)
         ) {
             // Main movie poster image goes here
+            AsyncImage(
+                model = "",
+                contentDescription = "Peli de prueba",
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

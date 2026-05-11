@@ -19,8 +19,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import org.koin.compose.viewmodel.koinViewModel
 import org.six.series.ui.components.basic.AdaptiveTopBar
-import org.six.series.ui.components.basic.CarouselMovies
+import org.six.series.ui.components.basic.carousel.CarouselMovies
+import org.six.series.ui.components.viewmodels.MainPageViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,6 +57,7 @@ fun MainComponent(rootNavController: NavController) {
             ) {
                 // Verification text
                 composable(MainRoutes.Principal) {
+                    val viewModel: MainPageViewModel = koinViewModel()
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -63,6 +66,9 @@ fun MainComponent(rootNavController: NavController) {
                         contentAlignment = Alignment.TopStart
                     ) {
                         CarouselMovies()
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("ESTÁS EN: PRINCIPAL", color = Color.White, fontSize = 24.sp)
+                        }
                     }
                 }
                 composable(MainRoutes.Movies) {
