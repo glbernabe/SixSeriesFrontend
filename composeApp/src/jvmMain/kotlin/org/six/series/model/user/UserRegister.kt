@@ -5,5 +5,7 @@ import kotlinx.serialization.Serializable
 data class UserRegister(
     val username: String,
     val password: String,
-    val email: String
+    val email: String,
+    val rol: String? = null,
+    val permissions: String? = null,
 )

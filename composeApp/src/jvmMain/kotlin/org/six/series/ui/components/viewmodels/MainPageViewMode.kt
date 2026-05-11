@@ -23,7 +23,6 @@ class MainPageViewModel(
     private val getAllContentUseCase: GetContentUseCase
 ) : ViewModel() {
 
-    // El estado que la UI observará
     var uiState by mutableStateOf<MainUiState>(MainUiState.Loading)
         private set
 
@@ -34,10 +33,8 @@ class MainPageViewModel(
     fun loadMovies() {
         uiState = MainUiState.Loading
         viewModelScope.launch {
-            // Llamamos al UseCase que configuramos antes
             val result = getAllContentUseCase()
 
-            // Evaluamos el Result que devuelve el UseCase
             result.onSuccess { list ->
                 uiState = if (list.isEmpty()) {
                     MainUiState.Error("No hay películas disponibles en este momento.")
@@ -45,14 +42,15 @@ class MainPageViewModel(
                     MainUiState.Success(list)
                 }
             }.onFailure { error ->
-                uiState = MainUiState.Error(error.message ?: "Error desconocido al conectar con el servidor")
+                uiState = MainUiState.Error(
+                    error.message ?: "Error desconocido al conectar con el servidor"
+                )
             }
         }
     }
 
-    // Función para manejar el click en una película
     fun onMovieSelected(movie: Content) {
-        println("Navegando a la película: ${movie.title}")
-        // Aquí es donde dispararías la navegación al reproductor
+        // Navigation logic for player would go here
+        println("Selected movie: ${movie.title}")
     }
 }

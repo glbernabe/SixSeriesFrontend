@@ -35,7 +35,7 @@ val appModulo = module {
     // Repository
     single<IUserRepository> {
         RestUserRepository(
-            url = "$url/users/",
+            url = "$url/users",
             cliente = get(),
             tokenStorage = get()
         )

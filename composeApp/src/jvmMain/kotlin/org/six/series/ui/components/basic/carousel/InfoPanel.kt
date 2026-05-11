@@ -15,20 +15,32 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.six.series.model.content.Content
 import org.six.series.profileButtonColors
 
 @Composable
 fun CarouselInfoPanel(
     itemTextStyle: TextStyle,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    content: Content
 ) {
+    var fontSizeValue by remember(content.title) { mutableFloatStateOf(60f) }
+    var readyToDraw by remember(content.title) { mutableStateOf(false) }
+
     Column(
         modifier = modifier.fillMaxHeight(),
         verticalArrangement = Arrangement.Center,
@@ -39,14 +51,40 @@ fun CarouselInfoPanel(
                 .border(width = 1.dp, color = Color.Gray)
         ) {
             Column {
-                // TITLE IMAGE AREA (Magenta Border)
+                // TITLE AREA (Magenta Border)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp)
-                        .border(width = 2.dp, color = Color.Magenta)
+                        .border(width = 2.dp, color = Color.Magenta),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // Movie Title Image
+                    Text(
+                        text = content.title,
+                        softWrap = true,
+                        maxLines = 3,
+                        textAlign = TextAlign.Center,
+                        style = TextStyle(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = fontSizeValue.sp // Usamos el valor dinámico
+                        ),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .drawWithContent {
+                                if (readyToDraw) drawContent()
+                            },
+                        onTextLayout = { textLayoutResult ->
+                            // This is for the title font, so he can be responsive
+                            if (textLayoutResult.hasVisualOverflow || textLayoutResult.didOverflowHeight) {
+                                // If the text overflows, then we reduce
+                                fontSizeValue *= 0.95f
+                            } else {
+                                // If it has the perfect size, then is return and shown
+                                readyToDraw = true
+                            }
+                        }
+                    )
                 }
 
                 // DETAIL CONTENT (Green Border)
@@ -68,7 +106,7 @@ fun CarouselInfoPanel(
                         ) {
                             Text(
                                 modifier = Modifier.padding(8.dp),
-                                text = "Información de toda la película una sinopsis totalmente normal.",
+                                text = content.description,
                                 style = TextStyle(
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
@@ -88,7 +126,8 @@ fun CarouselInfoPanel(
                         ) {
                             Text(
                                 modifier = Modifier.padding(8.dp),
-                                text = " Pel/Ser |  +N  |  nH nM / n Capítulos",
+                                text = "${content.type.name} | +${content.ageRating} | ${content.duration?.hour}h ${content.duration?.minute}m",
+                                // Pel/Ser |  +N  |  nH nM / n Capítulos"
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,

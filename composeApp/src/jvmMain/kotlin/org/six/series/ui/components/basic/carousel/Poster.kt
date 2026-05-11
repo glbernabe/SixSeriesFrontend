@@ -14,10 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import org.six.series.model.content.Content
 
 @Composable
 fun CarouselPoster(
     modifier: Modifier = Modifier,
+    content: Content
 
 ) {
     Column(
@@ -31,7 +33,7 @@ fun CarouselPoster(
         ) {
             // Main movie poster image goes here
             AsyncImage(
-                model = "",
+                model = content.coverURL,
                 contentDescription = "Peli de prueba",
                 modifier = Modifier.fillMaxWidth()
             )

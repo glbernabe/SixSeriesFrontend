@@ -1,5 +1,7 @@
 package org.six.series
 
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
@@ -15,6 +17,7 @@ import org.koin.dsl.module
 import org.six.series.di.appModulo
 import sixseries.composeapp.generated.resources.Res
 import sixseries.composeapp.generated.resources.logo_sixSeries
+import java.awt.Dimension
 import java.util.prefs.Preferences
 
 val DesktopPlatformModule = module {
@@ -23,6 +26,7 @@ val DesktopPlatformModule = module {
         PreferencesSettings(preferences)
     }
 }
+
 fun main() {
     startKoin {
         printLogger()
@@ -30,7 +34,6 @@ fun main() {
     }
 
     application {
-        // ImageLoader Setup
         setSingletonImageLoaderFactory { context ->
             ImageLoader.Builder(context)
                 .components { add(KtorNetworkFetcherFactory()) }
@@ -38,13 +41,19 @@ fun main() {
         }
 
         val icon = painterResource(Res.drawable.logo_sixSeries)
+        val windowState = rememberWindowState(
+            placement = WindowPlacement.Maximized,
+            size = DpSize(1280.dp, 800.dp)
+        )
 
         Window(
             onCloseRequest = ::exitApplication,
             icon = icon,
             title = "Six Series",
-            state = rememberWindowState(placement = WindowPlacement.Maximized)
+            state = windowState
         ) {
+            // We set a minimum value so the window can be redeable
+            window.minimumSize = Dimension(1100, 700)
             App()
         }
     }
