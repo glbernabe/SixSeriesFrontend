@@ -5,13 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.request.ImageRequest
+import kotlinx.coroutines.*
 import org.six.series.application.usecases.content.GetContentUseCase
 import org.six.series.model.content.Content
-import org.six.series.ui.components.login.LoginState
 
 sealed class MainUiState {
     object Loading : MainUiState()
@@ -20,7 +19,9 @@ sealed class MainUiState {
 }
 
 class MainPageViewModel(
-    private val getAllContentUseCase: GetContentUseCase
+    private val context: PlatformContext,
+    private val getAllContentUseCase: GetContentUseCase,
+    private val imageLoader: ImageLoader
 ) : ViewModel() {
 
     var uiState by mutableStateOf<MainUiState>(MainUiState.Loading)
@@ -32,25 +33,62 @@ class MainPageViewModel(
 
     fun loadMovies() {
         uiState = MainUiState.Loading
+
         viewModelScope.launch {
             val result = getAllContentUseCase()
 
             result.onSuccess { list ->
-                uiState = if (list.isEmpty()) {
-                    MainUiState.Error("No hay películas disponibles en este momento.")
-                } else {
-                    MainUiState.Success(list)
+
+                if (list.isEmpty()) {
+                    uiState = MainUiState.Error(
+                        "No hay películas disponibles en este momento."
+                    )
+                    return@onSuccess
                 }
+
+                try {
+                    // LOADS THE IMAGES BEFORE IT SHOWS
+                    val carouselTop = list.take(5)
+
+                    coroutineScope {
+
+                        val jobs = carouselTop.flatMap { movie ->
+
+                            listOfNotNull(
+                                movie.coverURL,
+                                movie.logoURL,
+                                movie.portraitURL
+                            ).map { imageUrl ->
+
+                                async(Dispatchers.IO) {
+
+                                    val request = ImageRequest.Builder(context)
+                                        .data(imageUrl)
+                                        .build()
+
+                                    imageLoader.execute(request)
+                                }
+                            }
+                        }
+
+                        jobs.awaitAll()
+                    }
+
+                    uiState = MainUiState.Success(list)
+
+                } catch (e: Exception) {
+
+                    uiState = MainUiState.Error(
+                        e.message ?: "Error cargando imágenes"
+                    )
+                }
+
             }.onFailure { error ->
+
                 uiState = MainUiState.Error(
                     error.message ?: "Error desconocido al conectar con el servidor"
                 )
             }
         }
-    }
-
-    fun onMovieSelected(movie: Content) {
-        // Navigation logic for player would go here
-        println("Selected movie: ${movie.title}")
     }
 }

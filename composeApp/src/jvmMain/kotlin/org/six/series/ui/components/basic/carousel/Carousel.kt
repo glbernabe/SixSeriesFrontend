@@ -49,12 +49,16 @@ fun CarouselMovies(
     ) {
 
         // The modifiers are passed here because of the inheritance
-        CarouselNavigationButton(onClick = {
-            scope.launch {
-                val prevPage = if (pagerState.currentPage > 0) pagerState.currentPage - 1 else content.size - 1
-                pagerState.animateScrollToPage(prevPage)
-            }
-        })
+        CarouselNavigationButton(
+            onClick = {
+                scope.launch {
+                    val prevPage = if (pagerState.currentPage > 0) pagerState.currentPage - 1 else content.size - 1
+                    pagerState.animateScrollToPage(prevPage)
+                }
+            },
+            isLeft = true,
+            rotation = 270f
+        )
 
         HorizontalPager(
             state = pagerState,
@@ -63,7 +67,6 @@ fun CarouselMovies(
         ) { page ->
             Row(modifier = Modifier.fillMaxSize()) {
 
-                // Pasamos content[page] para mostrar la película actual
                 CarouselInfoPanel(
                     itemTextStyle = itemTextStyle,
                     modifier = Modifier.weight(1f),
@@ -77,12 +80,16 @@ fun CarouselMovies(
             }
         }
 
-        CarouselNavigationButton(onClick = {
-            scope.launch {
-                val nextPage = (pagerState.currentPage + 1) % content.size
-                pagerState.animateScrollToPage(nextPage)
-            }
-        })
+        CarouselNavigationButton(
+            onClick = {
+                scope.launch {
+                    val nextPage = (pagerState.currentPage + 1) % content.size
+                    pagerState.animateScrollToPage(nextPage)
+                }
+            },
+            isLeft = false,
+            rotation = 90f,
+        )
     }
 
 }

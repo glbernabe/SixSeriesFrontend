@@ -24,7 +24,7 @@ import org.six.series.ui.components.login.LoginFormViewModel
 
 @Composable
 fun LoginScreen(
-    navController: NavController,   // lo recibimos para navegar
+    navController: NavController,
     onLogin: () -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -52,7 +52,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón simple para ir a Register
+        // Button to Register
         OutlinedButton(
             onClick = { navController.navigate(AppRoute.Register) },
             modifier = Modifier.height(40.dp)

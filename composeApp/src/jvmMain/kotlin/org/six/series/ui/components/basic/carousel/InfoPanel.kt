@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import org.six.series.model.content.Content
 import org.six.series.profileButtonColors
 
@@ -38,9 +39,6 @@ fun CarouselInfoPanel(
     modifier: Modifier = Modifier,
     content: Content
 ) {
-    var fontSizeValue by remember(content.title) { mutableFloatStateOf(60f) }
-    var readyToDraw by remember(content.title) { mutableStateOf(false) }
-
     Column(
         modifier = modifier.fillMaxHeight(),
         verticalArrangement = Arrangement.Center,
@@ -48,42 +46,20 @@ fun CarouselInfoPanel(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .border(width = 1.dp, color = Color.Gray)
         ) {
             Column {
-                // TITLE AREA (Magenta Border)
+                // TITLE AREA
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
-                        .border(width = 2.dp, color = Color.Magenta),
+                        .height(300.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = content.title,
-                        softWrap = true,
-                        maxLines = 3,
-                        textAlign = TextAlign.Center,
-                        style = TextStyle(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = fontSizeValue.sp // Usamos el valor dinámico
-                        ),
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .drawWithContent {
-                                if (readyToDraw) drawContent()
-                            },
-                        onTextLayout = { textLayoutResult ->
-                            // This is for the title font, so he can be responsive
-                            if (textLayoutResult.hasVisualOverflow || textLayoutResult.didOverflowHeight) {
-                                // If the text overflows, then we reduce
-                                fontSizeValue *= 0.95f
-                            } else {
-                                // If it has the perfect size, then is return and shown
-                                readyToDraw = true
-                            }
-                        }
+                    AsyncImage(
+                        model = content.logoURL,
+                        contentDescription = content.title,
+                        modifier = Modifier.fillMaxSize()
+
                     )
                 }
 
@@ -91,7 +67,6 @@ fun CarouselInfoPanel(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .border(width = 2.dp, color = Color.Green)
                         .padding(top = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -120,7 +95,6 @@ fun CarouselInfoPanel(
                             modifier = Modifier
                                 .weight(0.4f)
                                 .fillMaxWidth()
-                                .border(width = 2.dp, color = Color.Cyan)
                                 .background(MaterialTheme.colorScheme.onSurface),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -143,7 +117,6 @@ fun CarouselInfoPanel(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .border(width = 2.dp, color = Color.Red)
                             .background(MaterialTheme.colorScheme.onSurface)
                             .padding(vertical = 30.dp),
                         contentAlignment = Alignment.Center,

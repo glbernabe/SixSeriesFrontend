@@ -24,10 +24,14 @@ data class Content (
     @SerialName("age_rating")
     val ageRating: String,
     @SerialName("cover_url")
-    val coverURL: String,
+    val coverURL: String?= null,
     @SerialName("video_url")
     val videoURL: String,
-    val type: ContentType
+    val type: ContentType,
+    @SerialName("logo_url")
+    val logoURL: String? = null,
+    @SerialName("portrait_url")
+    val portraitURL: String? = null,
 )
 
 /*

@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -86,6 +88,7 @@ fun AdaptiveTopBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
+                .pointerHoverIcon(PointerIcon.Hand)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(MaterialTheme.colorScheme.primary, Color.Transparent)
@@ -130,7 +133,7 @@ fun AdaptiveTopBar(
                             } else {
                                 // Standard internal navigation between feature routes
                                 try {
-                                    navController.navigate(item.route) {
+                                    navController.navigate(item.route.toString()) {
                                         launchSingleTop = true
                                         restoreState = true
                                     }

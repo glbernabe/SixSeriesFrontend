@@ -61,7 +61,7 @@ val appModulo = module {
     viewModel { LoginFormViewModel(get()) }
 
     viewModel { RegisterFormViewModel(get()) }
-    viewModel { MainPageViewModel(get() ) }
+    viewModel { MainPageViewModel(get(), get(), get() ) }
     factory { RegisterUseCase(get()) }
     factory { LoginUseCase(get()) }
     factory { GetContentUseCase(get()) }

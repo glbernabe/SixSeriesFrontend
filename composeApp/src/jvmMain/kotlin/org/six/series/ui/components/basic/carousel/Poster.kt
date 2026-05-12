@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import org.six.series.model.content.Content
@@ -29,13 +30,13 @@ fun CarouselPoster(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.onBackground)
-                .border(width = 2.dp, color = Color.White)
         ) {
             // Main movie poster image goes here
             AsyncImage(
                 model = content.coverURL,
-                contentDescription = "Peli de prueba",
-                modifier = Modifier.fillMaxWidth()
+                contentDescription = "",
+                modifier = Modifier.fillMaxSize()
+
             )
         }
     }

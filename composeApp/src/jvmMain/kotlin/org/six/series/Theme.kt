@@ -24,9 +24,10 @@ val ProfileGreen = Color(0xFF7ED957)
  * Determines whether the content (text/icons) on a background should be Black or White
  * based on the background's luminance level.
  */
+val GhostWhite = Color(0xFFFCFCFC)
 fun Color.contrastingColor(): Color {
     // Luminance returns a value between 0.0 (darkest) and 1.0 (lightest)
-    return if (this.luminance() > 0.5f) Color.Black else Color.White
+    return if (this.luminance() > 0.5f) Color.Black else GhostWhite
 }
 
 // --- 3. DYNAMIC SCHEME GENERATOR ---

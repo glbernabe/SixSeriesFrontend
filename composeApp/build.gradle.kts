@@ -49,7 +49,7 @@ kotlin {
             // https://mvnrepository.com/artifact/io.coil-kt.coil3/coil
             // Imágenes
             implementation("io.coil-kt.coil3:coil-compose:3.3.0")
-            // implementation("io.coil-kt.coil3:coil:3.3.0")
+             implementation("io.coil-kt.coil3:coil:3.3.0")
 
             implementation("io.coil-kt.coil3:coil-network-ktor3:3.3.0")
             //ktor para servicios
