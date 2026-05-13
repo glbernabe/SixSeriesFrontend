@@ -35,7 +35,9 @@ fun CarouselPoster(
             AsyncImage(
                 model = content.coverURL,
                 contentDescription = "",
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentScale = ContentScale.Crop
 
             )
         }

@@ -1,7 +1,10 @@
 package org.six.series.ui.components.basic.carousel
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +16,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
@@ -21,6 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.six.series.model.content.Content
+
+val gradientColors = listOf(
+    Color.Black.copy(alpha = 0.8f),
+    Color.Transparent
+)
 
 @Composable
 fun CarouselMovies(
@@ -32,7 +41,7 @@ fun CarouselMovies(
     val itemTextStyle = TextStyle(
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
-        color = contentColor,
+        color = Color.White,
         shadow = Shadow(
             color = Color.Black.copy(alpha = 0.5f),
             offset = Offset(2f, 4f),
@@ -47,8 +56,6 @@ fun CarouselMovies(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-
-        // The modifiers are passed here because of the inheritance
         CarouselNavigationButton(
             onClick = {
                 scope.launch {
@@ -66,17 +73,32 @@ fun CarouselMovies(
             userScrollEnabled = true
         ) { page ->
             Row(modifier = Modifier.fillMaxSize()) {
-
                 CarouselInfoPanel(
                     itemTextStyle = itemTextStyle,
                     modifier = Modifier.weight(1f),
                     content = content[page]
                 )
 
-                CarouselPoster(
-                    modifier = Modifier.weight(2f),
-                    content = content[page]
-                )
+                Box(modifier = Modifier.weight(2f)) {
+                    CarouselPoster(
+                        modifier = Modifier.fillMaxSize(),
+                        content = content[page]
+                    )
+
+                    // The Gradint to emerge the image of the movie with the background
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(0.2f)
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    0.0f to Color.Black.copy(alpha = 0.9f),
+                                    0.1f to Color.Black.copy(alpha = 0.8f),
+                                    1f to Color.Transparent
+                                )
+                            )
+                    )
+                }
             }
         }
 
@@ -91,5 +113,4 @@ fun CarouselMovies(
             rotation = 90f,
         )
     }
-
 }

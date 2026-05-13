@@ -59,7 +59,6 @@ fun createHttpClient(tokenStorage: TokenStorage, refreshUrl: String): HttpClient
         // Auth
         install(Auth) {
             bearer {
-                // Evitar añadir tokens a rutas públicas
                 sendWithoutRequest { request ->
                     val path = request.url.encodedPath
                     path.startsWith("/api/public") || path.startsWith("/api/auth")

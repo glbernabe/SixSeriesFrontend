@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Colors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,25 +20,11 @@ import androidx.navigation.compose.rememberNavController
 import coil3.SingletonImageLoader
 import coil3.compose.LocalPlatformContext
 import org.koin.mp.KoinPlatform.getKoin
-import org.six.series.model.genre.Genre
 import org.six.series.ui.components.basic.AdaptiveTopBar
-import org.six.series.ui.components.basic.PrincipalScreen
-import org.six.series.ui.components.basic.genre.GenreCard
+import org.six.series.ui.components.basic.HeroScreen
 import org.six.series.ui.components.basic.genre.GenresGrid
 import org.six.series.ui.components.viewmodels.MainPageViewModel
 
-val vibrantColors = listOf(
-    Color.Red,
-    Color.Blue,
-    Color.Green,
-    Color.Yellow,
-    Color.Cyan,
-    Color.Magenta,
-    Color(0xFF9C27B0), // Purple
-    Color(0xFFFF9800), // Orange
-    Color(0xFF00BCD4), // Teal
-    Color(0xFF8BC34A)  // Light Green
-)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainComponent(rootNavController: NavController) {
@@ -74,7 +59,7 @@ fun MainComponent(rootNavController: NavController) {
                 startDestination = MainRoutes.Principal
             ) {
                 composable(MainRoutes.Principal) {
-                    PrincipalScreen(state = viewModel.uiState)
+                    HeroScreen(state = viewModel.uiState)
                 }
 
                 composable(MainRoutes.Movies) {

@@ -34,8 +34,8 @@ fun CarouselNavigationButton(
 ) {
     val gradientColors = if (isLeft) {
         listOf(
-            Color.Black.copy(alpha = 0.8f),
-            Color.Transparent
+            Color.Black,
+            Color.Black
         )
     } else {
         listOf(
@@ -48,7 +48,7 @@ fun CarouselNavigationButton(
         modifier = Modifier
             .width(100.dp)
             .fillMaxHeight()
-            .pointerHoverIcon(PointerIcon.Hand) // Añadido el cursor que pediste antes
+            .pointerHoverIcon(PointerIcon.Hand)
             .clickable { onClick() }
             .background(
                 brush = Brush.horizontalGradient(
@@ -71,7 +71,7 @@ fun IconArrow(rotationValue: Float) {
         painter = painterResource(Res.drawable.ic_arrow_up),
         contentDescription = "Right",
         modifier = Modifier
-            .rotate(rotationValue)// Right ->
+            .rotate(rotationValue)
             .padding(4.dp)
             .size(30.dp)
             .pointerHoverIcon(PointerIcon.Hand),

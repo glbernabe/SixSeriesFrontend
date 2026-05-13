@@ -5,26 +5,34 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.six.series.model.content.Content
 import org.six.series.ui.components.basic.carousel.CarouselMovies
-import org.six.series.ui.components.basic.content.MovieRow
+import org.six.series.ui.components.basic.content.ContentRow
 import org.six.series.ui.components.viewmodels.MainUiState
 import org.six.series.model.content.ContentType
-
+val gradientColors =
+    listOf(
+        Color.Black.copy(alpha = 0.8f),
+        Color.Transparent
+    )
 @Composable
-fun PrincipalScreen(state: MainUiState) {
+fun HeroScreen(state: MainUiState) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212)),
+            .background(
+                brush = Brush.radialGradient(
+                    colors = gradientColors
+                )
+            ),
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         when (state) {
@@ -49,18 +57,26 @@ fun PrincipalScreen(state: MainUiState) {
                     Box(modifier = Modifier.background(MaterialTheme.colorScheme.onBackground)) {
                         CarouselMovies(content = carousel)
                     }
+
+                    //Line between the Hero and the rest of the content
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                            .fillMaxWidth()
+                        .height(18.dp),
+                    )
                 }
 
                 item {
-                    MovieRow(title = "Películas", movies = cinema) { /* Navigate */ }
+                    ContentRow(title = "Películas", movies = cinema) { /* Navigate */ }
                 }
 
                 item {
-                    MovieRow(title = "Series", movies = series) { /* Navigate */ }
+                    ContentRow(title = "Series", movies = series) { /* Navigate */ }
                 }
 
                 item {
-                    MovieRow(title = "Documentales", movies = documentaries) { /* Navigate */ }
+                    ContentRow(title = "Documentales", movies = documentaries) { /* Navigate */ }
                 }
             }
 

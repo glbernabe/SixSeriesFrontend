@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -39,23 +40,33 @@ fun CarouselInfoPanel(
     modifier: Modifier = Modifier,
     content: Content
 ) {
+
+//    brush = Brush.horizontalGradient(
+//                        // 0.0f a 0.5f: se mantiene el color sólido
+//                        // 0.5f a 1.0f: ocurre la transición a transparente
+//                        0.0f to Color.Black.copy(alpha = 0.9f),
+//                        1f to Color.Black.copy(alpha = 0.6f),
+//                    )
+
     Column(
-        modifier = modifier.fillMaxHeight(),
+        modifier = modifier
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.onBackground),
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-                .background(MaterialTheme.colorScheme.onBackground),
+                .background(
+                    color = Color.Black,
+                )
         ) {
             Column {
                 // TITLE AREA
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
-                        .background(MaterialTheme.colorScheme.onBackground),
+                        .height(300.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     AsyncImage(
