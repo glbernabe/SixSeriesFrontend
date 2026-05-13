@@ -1,4 +1,4 @@
-package org.six.series.ui.components.basic
+package org.six.series.ui.components.basic.content
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -50,7 +50,7 @@ fun ContentCard(
                 )
             }
 
-            // Contenedor del Texto
+            // Text container
             Column(
                 modifier = Modifier
                     .weight(1.2f)
@@ -59,7 +59,7 @@ fun ContentCard(
             ) {
                 Text(
                     text = content.title,
-                    style = MaterialTheme.typography.titleMedium, // Usamos tipografía del tema
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis // If the title is to large is shows "..."
@@ -67,7 +67,7 @@ fun ContentCard(
 
                 // Here it can be shown additional information
                 Text(
-                    text = "Película",
+                    text = content.type.toString(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )

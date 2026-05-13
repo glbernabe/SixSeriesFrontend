@@ -1,4 +1,4 @@
-package org.six.series.ui.components.basic
+package org.six.series.ui.components.basic.content
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +19,7 @@ import org.six.series.model.content.Content
 fun MovieRow(
     title: String,
     movies: List<Content>,
-    onMovieClick: (Content) -> Unit
+    onMovieClick: (Content) -> Unit,
 ) {
     Column(
         modifier = Modifier

@@ -46,13 +46,16 @@ fun CarouselInfoPanel(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(16.dp)
+                .background(MaterialTheme.colorScheme.onBackground),
         ) {
             Column {
                 // TITLE AREA
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp),
+                        .height(300.dp)
+                        .background(MaterialTheme.colorScheme.onBackground),
                     contentAlignment = Alignment.Center
                 ) {
                     AsyncImage(
@@ -63,7 +66,7 @@ fun CarouselInfoPanel(
                     )
                 }
 
-                // DETAIL CONTENT (Green Border)
+                // DETAIL CONTENT
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -76,8 +79,7 @@ fun CarouselInfoPanel(
                         Box(
                             modifier = Modifier
                                 .weight(1.6f)
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.onSurface),
+                                .fillMaxWidth(),
                         ) {
                             Text(
                                 modifier = Modifier.padding(8.dp),
@@ -90,12 +92,11 @@ fun CarouselInfoPanel(
                             )
                         }
 
-                        // META DETAILS AREA (Cyan Border)
+                        // META DETAILS AREA
                         Box(
                             modifier = Modifier
                                 .weight(0.4f)
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.onSurface),
+                                .fillMaxWidth(),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
@@ -103,21 +104,21 @@ fun CarouselInfoPanel(
                                 text = "${content.type.name} | +${content.ageRating} | ${content.duration?.hour}h ${content.duration?.minute}m",
                                 // Pel/Ser |  +N  |  nH nM / n Capítulos"
                                 style = TextStyle(
-                                    fontSize = 16.sp,
+                                    fontSize = 26.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onPrimary,
+                                    textAlign = TextAlign.Justify,
                                     letterSpacing = 0.15.sp,
                                 )
                             )
                         }
                     }
 
-                    // WATCH BUTTON AREA (Red Border)
+                    // WATCH BUTTON AREA
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .background(MaterialTheme.colorScheme.onSurface)
                             .padding(vertical = 30.dp),
                         contentAlignment = Alignment.Center,
                     ) {

@@ -1,7 +1,11 @@
 package org.six.series.ui.components.basic
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
@@ -52,13 +57,11 @@ fun AdaptiveTopBar(
     navController: NavController,
     rootNavController: NavController
 ) {
-    // --- INJECTION & STATES ---
     val logoutUseCase = koinInject<LogOutUseCase>()
     val scope = rememberCoroutineScope()
     val contentColor = MaterialTheme.colorScheme.onPrimary
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // --- TEXT STYLES ---
     val logoStyle = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontSize = 32.sp,
@@ -88,7 +91,6 @@ fun AdaptiveTopBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .pointerHoverIcon(PointerIcon.Hand)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(MaterialTheme.colorScheme.primary, Color.Transparent)
@@ -97,32 +99,43 @@ fun AdaptiveTopBar(
                 .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // BRANDING
             Text(
                 text = "SIX SERIES",
                 style = logoStyle,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
 
-            // NAVIGATION ITEMS
             navItems.forEach { item ->
                 if (item.icon == Res.drawable.ic_magnifying_Glass) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
 
+                val interactionSource = remember { MutableInteractionSource() }
+                val isHovered by interactionSource.collectIsHoveredAsState()
+
+                val animatedBackgroundColor by animateColorAsState(
+                    targetValue = if (isHovered && item.icon != null) {
+                        contentColor.copy(alpha = 0.12f)
+                    } else {
+                        Color.Transparent
+                    },
+                    animationSpec = tween(durationMillis = 200)
+                )
+
                 Box(
                     modifier = Modifier
                         .padding(horizontal = 6.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable {
-                            // --- CLICK LOGIC ---
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) {
                             if (item.icon == Res.drawable.ic_user_Circle_Single) {
-                                // Execution of logout through the use case and navigation to root Login
                                 scope.launch {
                                     logoutUseCase.logout()
                                         .onSuccess {
                                             errorMessage = "Sesión cerrada correctamente"
-                                            rootNavController.navigate(AppRoute.Login){
+                                            rootNavController.navigate(AppRoute.Login) {
                                                 popUpTo(0)
                                             }
                                         }
@@ -131,9 +144,11 @@ fun AdaptiveTopBar(
                                         }
                                 }
                             } else {
-                                // Standard internal navigation between feature routes
                                 try {
-                                    navController.navigate(item.route.toString()) {
+                                    navController.navigate(item.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
                                         launchSingleTop = true
                                         restoreState = true
                                     }
@@ -142,24 +157,28 @@ fun AdaptiveTopBar(
                                 }
                             }
                         }
-                        .padding(8.dp)
+                        .pointerHoverIcon(PointerIcon.Hand)
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
                         if (item.icon != null) {
-                            Icon(
-                                painter = painterResource(item.icon),
-                                contentDescription = item.label,
-                                tint = contentColor,
+                            Box(
                                 modifier = Modifier
-                                    .size(26.dp)
-                                    .graphicsLayer {
-                                        shadowElevation = 4f
-                                        shape = CircleShape
-                                    }
-                            )
+                                    .size(40.dp)
+                                    .background(color = animatedBackgroundColor, shape = CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(item.icon),
+                                    contentDescription = item.label,
+                                    tint = contentColor,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
                         }
 
                         if (item.icon != null && !item.label.isNullOrEmpty()) {
@@ -177,7 +196,6 @@ fun AdaptiveTopBar(
             }
         }
 
-        // --- ERROR OVERLAY ---
         if (errorMessage != null) {
             Box(
                 modifier = Modifier

@@ -7,7 +7,7 @@ import org.jetbrains.compose.resources.DrawableResource
 
 data class NavigationItem(
     val icon: DrawableResource? = null,
-    val route: String? = null,
+    val route: String,
     val label: String? = null,
     val showLabel: Boolean = true,
 )
