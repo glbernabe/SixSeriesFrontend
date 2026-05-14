@@ -24,6 +24,7 @@ import org.six.series.ui.components.basic.AdaptiveTopBar
 import org.six.series.ui.components.basic.HeroScreen
 import org.six.series.ui.components.basic.genre.GenresGrid
 import org.six.series.ui.components.viewmodels.MainPageViewModel
+import org.six.series.ui.components.viewmodels.MainUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +37,8 @@ fun MainComponent(rootNavController: NavController) {
         MainPageViewModel(
             context = context,
             imageLoader = imageLoader,
-            getAllContentUseCase = getKoin().get()
+            getContentUseCase = getKoin().get(),
+            getGenresUseCase = getKoin().get()
         )
     }
 
@@ -94,15 +96,6 @@ fun PlaceholderScreen(text: String) {
             .background(Color(0xFF121212)),
         contentAlignment = Alignment.Center
     ) {
-        // This is an example of the category
-        if (text == "Explorar Géneros"){
-            GenresGrid()
-            return
-        }
-
         Text(text = text, color = Color.White, style = MaterialTheme.typography.headlineMedium)
-
-
-
     }
 }

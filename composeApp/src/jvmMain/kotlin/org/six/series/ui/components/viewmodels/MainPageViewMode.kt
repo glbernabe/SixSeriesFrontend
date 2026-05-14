@@ -10,17 +10,23 @@ import coil3.PlatformContext
 import coil3.request.ImageRequest
 import kotlinx.coroutines.*
 import org.six.series.application.usecases.content.GetContentUseCase
+import org.six.series.application.usecases.genre.GetGenresUseCase
 import org.six.series.model.content.Content
+import org.six.series.model.genre.Genre
 
 sealed class MainUiState {
     object Loading : MainUiState()
-    data class Success(val movies: List<Content>) : MainUiState()
+    data class Success(
+        val movies: List<Content>,
+        val genres: List<Genre>
+    ) : MainUiState()
     data class Error(val message: String) : MainUiState()
 }
 
 class MainPageViewModel(
     private val context: PlatformContext,
-    private val getAllContentUseCase: GetContentUseCase,
+    private val getContentUseCase: GetContentUseCase,
+    private val getGenresUseCase: GetGenresUseCase,
     private val imageLoader: ImageLoader
 ) : ViewModel() {
 
@@ -28,66 +34,42 @@ class MainPageViewModel(
         private set
 
     init {
-        loadMovies()
+        loadInitialData()
     }
 
-    fun loadMovies() {
+    fun loadInitialData() {
         uiState = MainUiState.Loading
 
         viewModelScope.launch {
-            val result = getAllContentUseCase()
+            val contentDeferred = async { getContentUseCase() }
+            val genresDeferred = async { getGenresUseCase() }
 
-            result.onSuccess { list ->
+            val contentResult = contentDeferred.await()
+            val genresResult = genresDeferred.await()
 
-                if (list.isEmpty()) {
-                    uiState = MainUiState.Error(
-                        "No hay películas disponibles en este momento."
-                    )
-                    return@onSuccess
+            if (contentResult.isSuccess && genresResult.isSuccess) {
+                val movies = contentResult.getOrThrow()
+                val genres = genresResult.getOrThrow()
+
+                uiState = MainUiState.Success(movies, genres)
+
+                preloadImages(movies.take(5))
+            } else {
+                uiState = MainUiState.Error("Error al cargar los datos del servidor")
+            }
+        }
+    }
+
+    private fun preloadImages(movies: List<Content>) {
+        movies.forEach { movie ->
+            val urls = listOfNotNull(movie.coverURL, movie.logoURL, movie.portraitURL)
+            urls.forEach { imageUrl ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    val request = ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .build()
+                    imageLoader.execute(request)
                 }
-
-                try {
-                    // LOADS THE IMAGES BEFORE IT SHOWS
-                    val carouselTop = list.take(5)
-
-                    coroutineScope {
-
-                        val jobs = carouselTop.flatMap { movie ->
-
-                            listOfNotNull(
-                                movie.coverURL,
-                                movie.logoURL,
-                                movie.portraitURL
-                            ).map { imageUrl ->
-
-                                async(Dispatchers.IO) {
-
-                                    val request = ImageRequest.Builder(context)
-                                        .data(imageUrl)
-                                        .build()
-
-                                    imageLoader.execute(request)
-                                }
-                            }
-                        }
-
-                        jobs.awaitAll()
-                    }
-
-                    uiState = MainUiState.Success(list)
-
-                } catch (e: Exception) {
-
-                    uiState = MainUiState.Error(
-                        e.message ?: "Error cargando imágenes"
-                    )
-                }
-
-            }.onFailure { error ->
-
-                uiState = MainUiState.Error(
-                    error.message ?: "Error desconocido al conectar con el servidor"
-                )
             }
         }
     }

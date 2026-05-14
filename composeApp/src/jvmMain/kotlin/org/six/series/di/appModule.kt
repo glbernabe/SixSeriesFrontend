@@ -9,12 +9,15 @@ import org.six.series.infrastructure.ktor.createHttpClient
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import org.six.series.application.usecases.content.GetContentUseCase
+import org.six.series.application.usecases.genre.GetGenresUseCase
 import org.six.series.application.usecases.user.LogOutUseCase
 import org.six.series.application.usecases.user.LoginUseCase
 import org.six.series.application.usecases.user.RegisterUseCase
 import org.six.series.infrastructure.RestContentRepository
+import org.six.series.infrastructure.RestGenreRepository
 import org.six.series.infrastructure.RestUserRepository
 import org.six.series.model.content.IContentRepository
+import org.six.series.model.genre.IGenreRepository
 import org.six.series.ui.appsettings.AppSettings
 import org.six.series.ui.components.viewmodels.MainPageViewModel
 
@@ -49,6 +52,14 @@ val appModulo = module {
         )
     }
 
+    single<IGenreRepository> {
+        RestGenreRepository(
+            url = "$url/genres",
+            cliente = get(),
+            tokenStorage = get()
+        )
+    }
+
     single {
         AppSettings(databasePath = "app_settings.preferences_pb")
     }
@@ -61,9 +72,9 @@ val appModulo = module {
     viewModel { LoginFormViewModel(get()) }
 
     viewModel { RegisterFormViewModel(get()) }
-    viewModel { MainPageViewModel(get(), get(), get() ) }
+    viewModel { MainPageViewModel(get(), get(), get(), get() ) }
     factory { RegisterUseCase(get()) }
     factory { LoginUseCase(get()) }
     factory { GetContentUseCase(get()) }
-
+    factory { GetGenresUseCase(get()) }
 }
