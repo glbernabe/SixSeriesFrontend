@@ -3,11 +3,13 @@ package org.six.series.ui.components.basic
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,12 +26,15 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.skia.Surface
 import org.koin.compose.koinInject
 import org.six.series.AppRoute
 import org.six.series.application.usecases.user.LogOutUseCase
@@ -61,6 +66,7 @@ fun AdaptiveTopBar(
     val scope = rememberCoroutineScope()
     val contentColor = MaterialTheme.colorScheme.onPrimary
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showUserMenu by remember { mutableStateOf(false) }
 
     val logoStyle = TextStyle(
         fontFamily = FontFamily.Monospace,
@@ -131,18 +137,19 @@ fun AdaptiveTopBar(
                             indication = null
                         ) {
                             if (item.icon == Res.drawable.ic_user_Circle_Single) {
-                                scope.launch {
-                                    logoutUseCase.logout()
-                                        .onSuccess {
-                                            errorMessage = "Sesión cerrada correctamente"
-                                            rootNavController.navigate(AppRoute.Login) {
-                                                popUpTo(0)
-                                            }
-                                        }
-                                        .onFailure {
-                                            errorMessage = "Error al intentar cerrar sesión"
-                                        }
-                                }
+                                showUserMenu = !showUserMenu
+//                                scope.launch {
+//                                    logoutUseCase.logout()
+//                                        .onSuccess {
+//                                            errorMessage = "Sesión cerrada correctamente"
+//                                            rootNavController.navigate(AppRoute.Login) {
+//                                                popUpTo(0)
+//                                            }
+//                                        }
+//                                        .onFailure {
+//                                            errorMessage = "Error al intentar cerrar sesión"
+//                                        }
+//                                }
                             } else {
                                 try {
                                     navController.navigate(item.route) {
@@ -192,6 +199,17 @@ fun AdaptiveTopBar(
                             )
                         }
                     }
+
+                    if (item.icon == Res.drawable.ic_user_Circle_Single && showUserMenu) {
+                        DropdownMenu(
+                            expanded = showUserMenu,
+                            onDismissRequest = { showUserMenu = false },
+                            modifier = Modifier.background(Color.Transparent),
+                            offset = DpOffset(0.dp, 8.dp)
+                        ) {
+                            DisplayPanelOptions()
+                        }
+                    }
                 }
             }
         }
@@ -208,6 +226,62 @@ fun AdaptiveTopBar(
                     onDismiss = { errorMessage = null }
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun DisplayPanelOptions(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    dividerColor: Color = Color.Black.copy(alpha = 0.5f),
+    dividerThickness: Dp = 2.dp,
+    shape: CornerBasedShape = RoundedCornerShape(8.dp),
+    elevation: Dp = 4.dp,
+    leftColumnContent: @Composable ColumnScope.() -> Unit = {
+        Text("Soy una opción", style = MaterialTheme.typography.bodyLarge)
+    },
+    rightColumnContent: @Composable ColumnScope.() -> Unit = {
+        Text("Hola Mundo", style = MaterialTheme.typography.bodyLarge)
+    }
+) {
+    Surface(
+        modifier = modifier
+            .width(350.dp)
+            .height(500.dp),
+        shape = shape,
+        color = backgroundColor,
+        tonalElevation = elevation
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Columna Izquierda
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(all = 12.dp),
+                content = leftColumnContent
+            )
+
+            // Línea Divisoria Optimizada
+            VerticalDivider(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 16.dp), // Margen arriba/abajo para que no toque los bordes
+                thickness = dividerThickness,
+                color = dividerColor
+            )
+
+            // Columna Derecha
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(all = 12.dp),
+                content = rightColumnContent
+            )
         }
     }
 }

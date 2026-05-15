@@ -17,7 +17,7 @@ fun ErrorNotification(
 ) {
     Surface(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(300.dp)
             .padding(16.dp),
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.errorContainer,

@@ -57,7 +57,7 @@ fun ContentCard(
                     },
                     contentDescription = content.title,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Fit,
                 )
             }
 

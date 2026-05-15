@@ -77,7 +77,7 @@ fun MainComponent(rootNavController: NavController) {
                 }
 
                 composable(MainRoutes.Genres) {
-                    PlaceholderScreen("Explorar Géneros")
+                    GenresGrid(viewModel.uiState)
                 }
 
                 composable(MainRoutes.Profile) {
