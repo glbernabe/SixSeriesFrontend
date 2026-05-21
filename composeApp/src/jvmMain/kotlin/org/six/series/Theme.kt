@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 
+
 // --- 1. PREDEFINED PROFILE COLORS ---
 val ProfilePink = Color(0xFFE2A9F1)
 val ProfileRed = Color(0xFFFF3131)
@@ -30,6 +31,19 @@ fun Color.contrastingColor(): Color {
     return if (this.luminance() > 0.5f) Color.Black else GhostWhite
 }
 
+/**
+ * Specifically simulates the color blending over a white background (0xFFFDFDFD)
+ * to find the real perceived luminance when alpha is applied.
+ */
+fun Color.contrastingColorWithAlpha(alpha: Float, backgroundColor: Color = Color(0xFFFDFDFD)): Color {
+    val blendedRed = this.red * alpha + backgroundColor.red * (1f - alpha)
+    val blendedGreen = this.green * alpha + backgroundColor.green * (1f - alpha)
+    val blendedBlue = this.blue * alpha + backgroundColor.blue * (1f - alpha)
+
+    val blendedColor = Color(red = blendedRed, green = blendedGreen, blue = blendedBlue)
+    return if (blendedColor.luminance() > 0.5f) Color.Black else GhostWhite
+}
+
 // --- 3. DYNAMIC SCHEME GENERATOR ---
 /**
  * Generates a dynamic ColorScheme based on a single base color.
@@ -39,19 +53,28 @@ fun Color.contrastingColor(): Color {
  * - surfaceVariant: Used by Cards and TextFields; here it's kept neutral but can be tinted.
  */
 fun profileScheme(baseColor: Color): ColorScheme {
+    val isLight = baseColor.luminance() > 0.5f
+
     val onPrimaryColor = baseColor.contrastingColor()
+    val secondaryColor = baseColor.copy(alpha = 0.7f)
+
+    // Calculates the real contrast considering the 70% opacity over the standard background
+    val onSecondaryColor = baseColor.contrastingColorWithAlpha(alpha = 0.7f)
+
+    val primaryContainerColor = if (isLight) baseColor.copy(alpha = 0.25f) else baseColor.copy(alpha = 0.15f)
+    val onPrimaryContainerColor = if (isLight) Color.Black else baseColor
 
     return lightColorScheme(
         primary = baseColor,
         onPrimary = onPrimaryColor,
 
         // Primary Container: Used for less prominent highlights
-        primaryContainer = baseColor.copy(alpha = 0.15f),
-        onPrimaryContainer = baseColor,
+        primaryContainer = primaryContainerColor,
+        onPrimaryContainer = onPrimaryContainerColor,
 
         // Secondary: Used for less prominent components (70% opacity of base)
-        secondary = baseColor.copy(alpha = 0.7f),
-        onSecondary = Color.White,
+        secondary = secondaryColor,
+        onSecondary = onSecondaryColor,
 
         // Main Backgrounds: Standard near-white for clean contrast
         background = Color(0xFFFDFDFD),
@@ -102,7 +125,6 @@ fun AppTheme(
 
     MaterialTheme(
         colorScheme = colors,
-        // You can also link a Typography() object here if defined
         content = content
     )
 }

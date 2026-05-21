@@ -5,12 +5,17 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,7 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextStyle
@@ -34,10 +39,11 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.skia.Surface
 import org.koin.compose.koinInject
 import org.six.series.AppRoute
 import org.six.series.application.usecases.user.LogOutUseCase
+import org.six.series.infrastructure.TokenStorage
+import org.six.series.infrastructure.UserTokenData
 import org.six.series.model.NavigationItem
 import org.six.series.ui.components.main.MainRoutes
 import sixseries.composeapp.generated.resources.Res
@@ -63,6 +69,8 @@ fun AdaptiveTopBar(
     rootNavController: NavController
 ) {
     val logoutUseCase = koinInject<LogOutUseCase>()
+    // Single Source of Truth for session data injection
+    val tokenStorage = koinInject<TokenStorage>()
     val scope = rememberCoroutineScope()
     val contentColor = MaterialTheme.colorScheme.onPrimary
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -138,18 +146,7 @@ fun AdaptiveTopBar(
                         ) {
                             if (item.icon == Res.drawable.ic_user_Circle_Single) {
                                 showUserMenu = !showUserMenu
-//                                scope.launch {
-//                                    logoutUseCase.logout()
-//                                        .onSuccess {
-//                                            errorMessage = "Sesión cerrada correctamente"
-//                                            rootNavController.navigate(AppRoute.Login) {
-//                                                popUpTo(0)
-//                                            }
-//                                        }
-//                                        .onFailure {
-//                                            errorMessage = "Error al intentar cerrar sesión"
-//                                        }
-//                                }
+
                             } else {
                                 try {
                                     navController.navigate(item.route) {
@@ -201,13 +198,40 @@ fun AdaptiveTopBar(
                     }
 
                     if (item.icon == Res.drawable.ic_user_Circle_Single && showUserMenu) {
+                        // Fetch the pre-parsed payload tokens lazily on menu display
+                        val userData = remember(showUserMenu) { tokenStorage.getUserData() }
+
                         DropdownMenu(
                             expanded = showUserMenu,
                             onDismissRequest = { showUserMenu = false },
-                            modifier = Modifier.background(Color.Transparent),
-                            offset = DpOffset(0.dp, 8.dp)
+                            offset = DpOffset(0.dp, 8.dp),
+                            // Modifiers moved here to keep container rendering sharp and clean
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(8.dp),
+                            tonalElevation = 0.dp,
+                            shadowElevation = 8.dp,
+                            modifier = Modifier.background(Color.Transparent)
                         ) {
-                            DisplayPanelOptions()
+                            DisplayPanelOptions(
+                                userData = userData,
+                                backgroundColor = Color.Transparent,
+                                elevation = 0.dp,
+                                onSignOutClick = {
+                                    showUserMenu = false
+                                    scope.launch {
+                                        logoutUseCase.logout()
+                                            .onSuccess {
+                                                errorMessage = "Sesión cerrada correctamente"
+                                                rootNavController.navigate(AppRoute.Login) {
+                                                    popUpTo(0)
+                                                }
+                                            }
+                                            .onFailure {
+                                                errorMessage = "Error al intentar cerrar sesión"
+                                            }
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -232,56 +256,128 @@ fun AdaptiveTopBar(
 
 @Composable
 fun DisplayPanelOptions(
-    modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    dividerColor: Color = Color.Black.copy(alpha = 0.5f),
-    dividerThickness: Dp = 2.dp,
-    shape: CornerBasedShape = RoundedCornerShape(8.dp),
-    elevation: Dp = 4.dp,
-    leftColumnContent: @Composable ColumnScope.() -> Unit = {
-        Text("Soy una opción", style = MaterialTheme.typography.bodyLarge)
-    },
-    rightColumnContent: @Composable ColumnScope.() -> Unit = {
-        Text("Hola Mundo", style = MaterialTheme.typography.bodyLarge)
-    }
+    userData: UserTokenData? = null,
+    backgroundColor: Color = Color.Transparent,
+    elevation: Dp = 0.dp,
+    onSignOutClick: () -> Unit,
 ) {
     Surface(
-        modifier = modifier
+        modifier = Modifier
             .width(350.dp)
             .height(500.dp),
-        shape = shape,
+        shape = RoundedCornerShape(8.dp),
         color = backgroundColor,
-        tonalElevation = elevation
+        shadowElevation = elevation,
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.98f)),
         ) {
-            // Columna Izquierda
+            // Left Column: Streaming Options Navigation
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .padding(all = 12.dp),
-                content = leftColumnContent
-            )
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Manage",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
 
-            // Línea Divisoria Optimizada
-            VerticalDivider(
+                StreamingOptionItem(icon = Icons.Default.AccountCircle, label = "Perfiles") { }
+                StreamingOptionItem(icon = Icons.Default.List, label = "Mis Listas") { }
+                StreamingOptionItem(icon = Icons.Default.Settings, label = "Ajustes") { }
+                StreamingOptionItem(icon = Icons.Default.ExitToApp, label = "Cerrar Sesión") { onSignOutClick() }
+            }
+
+            Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(vertical = 16.dp), // Margen arriba/abajo para que no toque los bordes
-                thickness = dividerThickness,
-                color = dividerColor
-            )
+                    .width(2.dp)
+                    .border(
+                        width = 3.dp,
+                        color = Color.Black.copy(alpha = 0.5f),
+                    )
+            ) { }
 
-            // Columna Derecha
+            // Right Column: Active Profile Context Preview
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .padding(all = 12.dp),
-                content = rightColumnContent
-            )
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Real decoded username from DataStore storage session tokens
+                Text(
+                    text = userData?.username ?: "Guest",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                // Real decoded role metadata hierarchy string with dynamic display mapping
+                Text(
+                    text = when (userData?.role) {
+                        "superuser" -> "Administrador"
+                        "user" -> "Usuario"
+                        null -> "No Role"
+                        else -> userData.role // Fallback for any other unexpected role value
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun StreamingOptionItem(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isHovered) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
+        label = "HoverAnimation"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .hoverable(interactionSource = interactionSource)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .background(backgroundColor, RoundedCornerShape(4.dp))
+            .padding(horizontal = 8.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }

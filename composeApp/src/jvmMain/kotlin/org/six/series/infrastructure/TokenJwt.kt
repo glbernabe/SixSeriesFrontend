@@ -5,27 +5,30 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Clock
 
-data class TokenJwtHeader( val alg:String, val typ:String)
-{
+data class TokenJwtHeader(val alg: String, val typ: String)
 
-}
-data class TokenJwtPayload(val claims: Map<String, Any> = emptyMap()){
+data class TokenJwtPayload(val claims: Map<String, Any> = emptyMap()) {
     @Suppress("UNCHECKED_CAST")
     fun <T> get(key: String): T? = claims[key] as? T
 
-    // Propiedades calculadas para los campos más comunes (opcional)
     val userId: String? get() = get("sub")
     val expiration: Long? get() = (claims["exp"] as? Number)?.toLong()
 }
-data class TokenJwtFirma(val firma:String)
 
+data class TokenJwtFirma(val firma: String)
 
+// Structured data representation of the custom claims inside the token
+data class UserTokenData(
+    val username: String?,
+    val role: String?
+)
 
 class TokenJwt(val rawToken: String) {
 
     val header: TokenJwtHeader
     val payload: TokenJwtPayload
     val firma: TokenJwtFirma
+
     init {
         val parts = rawToken.split(".")
         if (parts.size != 3) {
@@ -35,6 +38,17 @@ class TokenJwt(val rawToken: String) {
         payload = decodePayload(parts[1])
         firma = TokenJwtFirma(parts[2])
     }
+
+    /**
+     * Extracts and structures the key claims from the decoded payload for UI consumption.
+     */
+    fun getUserData(): UserTokenData {
+        return UserTokenData(
+            username = payload.get<String>("username") ?: payload.userId,
+            role = payload.get<String>("role")
+        )
+    }
+
     @OptIn(ExperimentalEncodingApi::class)
     private fun decodeHeader(base64Header: String): TokenJwtHeader {
         val jsonString = Base64.UrlSafe.decode(base64Header).decodeToString()
@@ -71,10 +85,10 @@ class TokenJwt(val rawToken: String) {
             else -> toString()
         }
     }
-    fun isSessionValid(): Boolean {
-       return  this.payload.get<Long>("exp")?.let {
-            it> Clock.System.now().epochSeconds
-        }?:false
 
+    fun isSessionValid(): Boolean {
+        return this.payload.get<Long>("exp")?.let {
+            it > Clock.System.now().epochSeconds
+        } ?: false
     }
 }
