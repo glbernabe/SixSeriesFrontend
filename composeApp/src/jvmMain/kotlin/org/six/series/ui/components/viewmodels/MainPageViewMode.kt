@@ -33,6 +33,16 @@ class MainPageViewModel(
     var uiState by mutableStateOf<MainUiState>(MainUiState.Loading)
         private set
 
+    // --- Search States ---
+    var searchQuery by mutableStateOf("")
+        private set
+
+    var searchResults by mutableStateOf<List<Content>>(emptyList())
+        private set
+
+    var isSearching by mutableStateOf(false)
+        private set
+
     init {
         loadInitialData()
     }
@@ -56,6 +66,38 @@ class MainPageViewModel(
                 preloadImages(movies.take(5))
             } else {
                 uiState = MainUiState.Error("Error al cargar los datos del servidor")
+            }
+        }
+    }
+
+    // --- Research Function ---
+    fun updateSearchQuery(query: String) {
+        searchQuery = query
+        if (query.isBlank()) {
+            searchResults = emptyList()
+        } else {
+            // Will search automatically while you type
+            performSearch()
+        }
+    }
+
+    fun performSearch() {
+        if (searchQuery.isBlank()) return
+
+        uiState.let { currentStatus ->
+            // It loads the current content catalog before searching for better experience
+            if (currentStatus is MainUiState.Success) {
+                viewModelScope.launch {
+                    isSearching = true
+
+                    // Simulates an async backend or local repository filter operation matching titles
+                    val filtered = currentStatus.movies.filter { content ->
+                        content.title.contains(searchQuery, ignoreCase = true)
+                    }
+
+                    searchResults = filtered
+                    isSearching = false
+                }
             }
         }
     }

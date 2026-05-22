@@ -22,6 +22,7 @@ import coil3.compose.LocalPlatformContext
 import org.koin.mp.KoinPlatform.getKoin
 import org.six.series.ui.components.basic.AdaptiveTopBar
 import org.six.series.ui.components.basic.HeroScreen
+import org.six.series.ui.components.basic.content.SearchContentScreen
 import org.six.series.ui.components.basic.genre.GenresGrid
 import org.six.series.ui.components.viewmodels.MainPageViewModel
 import org.six.series.ui.components.viewmodels.MainUiState
@@ -73,7 +74,17 @@ fun MainComponent(rootNavController: NavController) {
                 }
 
                 composable(MainRoutes.Search) {
-                    PlaceholderScreen("Buscador")
+                    SearchContentScreen(
+                        searchQuery = viewModel.searchQuery,
+                        searchResults = viewModel.searchResults,
+                        isSearching = viewModel.isSearching,
+                        onQueryChange = { updatedQuery ->
+                            viewModel.updateSearchQuery(updatedQuery)
+                        },
+                        onMovieClick = { selectedMovie ->
+                            // Handle navigation to the video player or detail screen here
+                        }
+                    )
                 }
 
                 composable(MainRoutes.Genres) {
