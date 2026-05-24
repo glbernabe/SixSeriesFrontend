@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,40 +13,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
+import org.koin.compose.viewmodel.koinViewModel
 import org.six.series.ui.appsettings.AppViewModel
 import org.six.series.ui.components.screens.LoginScreen
 import org.six.series.ui.components.screens.MainScreen
+import org.six.series.ui.components.screens.ProfileSelectorScreen
 import org.six.series.ui.components.screens.RegisterScreen
-import org.koin.compose.viewmodel.koinViewModel
+import org.six.series.ui.components.screens.SubscriptionScreen
 
 @Composable
 fun App() {
     val appViewModel: AppViewModel = koinViewModel()
     val navController = rememberNavController()
     val startDestination by appViewModel.startDestination.collectAsState()
-
-    // We obtain the Stateflow of the color and change it to State of Compose
     val appColorLong by appViewModel.currentHexColor.collectAsState()
 
     if (startDestination == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
 
-    // Transform the State to a Color
-    AppTheme(
-        selectedProfileColor = Color(appColorLong)
-    ) {
+    AppTheme(selectedProfileColor = Color(appColorLong)) {
         Column(
             modifier = Modifier
-                // Depending on the profile, the color of the app colors changes
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(Color(0xFF0D0D0D))
                 .safeContentPadding()
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -59,8 +50,8 @@ fun App() {
                 composable(AppRoute.Login) {
                     LoginScreen(
                         navController = navController,
-                        onLogin = { navController.navigate(AppRoute.Main) },
-                        onCancel = { /* TODO: cerrar app o limpiar */ }
+                        onLogin = { navController.navigate(AppRoute.ProfileSelector) },
+                        onCancel = { }
                     )
                 }
 
@@ -72,8 +63,35 @@ fun App() {
                     )
                 }
 
+                composable(AppRoute.ProfileSelector) {
+                    ProfileSelectorScreen(
+                        onProfileSelected = { profile ->
+                            profile.themeColor?.let { hex ->
+                                try {
+                                    val colorLong = hex.removePrefix("#").toLong(16) or 0xFF000000L
+                                    appViewModel.setColorFromProfile(colorLong)
+                                } catch (e: Exception) { /* keep current color */ }
+                            }
+                            navController.navigate(AppRoute.Main) {
+                                popUpTo(AppRoute.ProfileSelector) { inclusive = true }
+                            }
+                        },
+                        onManageSubscription = {
+                            // Pantalla de suscripción independiente, sin TopBar de Main
+                            navController.navigate(AppRoute.SubscriptionManager)
+                        }
+                    )
+                }
+
                 composable(AppRoute.Main) {
                     MainScreen(navController)
+                }
+
+                // Ruta raíz para gestionar suscripción desde el selector de perfil
+                composable(AppRoute.SubscriptionManager) {
+                    SubscriptionScreen(
+                        onBack = { navController.popBackStack() }
+                    )
                 }
             }
         }

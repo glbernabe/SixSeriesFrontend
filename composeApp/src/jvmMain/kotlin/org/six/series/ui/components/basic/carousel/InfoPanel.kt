@@ -38,7 +38,8 @@ import org.six.series.profileButtonColors
 fun CarouselInfoPanel(
     itemTextStyle: TextStyle,
     modifier: Modifier = Modifier,
-    content: Content
+    content: Content,
+    onPlayContent: (Content) -> Unit = {}
 ) {
 
 //    brush = Brush.horizontalGradient(
@@ -135,7 +136,7 @@ fun CarouselInfoPanel(
                     ) {
                         Button(
                             modifier = Modifier.height(60.dp),
-                            onClick = {},
+                            onClick = { onPlayContent(content) },
                             colors = profileButtonColors()
                         ) {
                             Text(

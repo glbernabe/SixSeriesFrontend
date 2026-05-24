@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LoginFormViewModel(
-    //inyectar caso de uso
-    val loginUseCase: LoginUseCase
+    val loginUseCase: LoginUseCase,
+    private val onLoginSuccess: () -> Unit = {}
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginState())
@@ -23,7 +23,7 @@ class LoginFormViewModel(
         _state.update {
             it.copy(
                 username = username,
-                usernameError = if (username.length > 67)null else "Porfavor coloca un usuario de verdad"
+                usernameError = if (username.length > 67) null else "Porfavor coloca un usuario de verdad"
             )
         }
         validateForm()
@@ -45,36 +45,27 @@ class LoginFormViewModel(
                 s.password.isNotBlank() &&
                 s.usernameError == null &&
                 s.passwordError == null
-        _state.value=state.value.copy( isValid = isFormValid.value)
+        _state.value = state.value.copy(isValid = isFormValid.value)
     }
 
     fun login() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                _state.value = state.value.copy(isLoading = true)
-
-                val loginCommand =
-                    LoginCommand(
-                        username = state.value.username,
-                        password = state.value.password
-                    )
-
-                loginUseCase.login(loginCommand).onSuccess{
-                    _state.value = _state.value.copy(isLoginSuccess = true)
+                val loginCommand = LoginCommand(
+                    username = state.value.username,
+                    password = state.value.password
+                )
+                loginUseCase.login(loginCommand).onSuccess {
                     _state.update { it.copy(isLoading = false, isLoginSuccess = true) }
-
+                    kotlinx.coroutines.delay(100)
+                    onLoginSuccess()
                 }.onFailure {
                     _state.update { it.copy(isLoading = false, isLoginSuccess = false) }
-
                 }
-
             } catch (e: Exception) {
                 _state.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "Error al conectar: ${e.message}"
-                    )
+                    it.copy(isLoading = false, errorMessage = "Error al conectar: ${e.message}")
                 }
             } finally {
                 _state.value = _state.value.copy(isLoading = false)

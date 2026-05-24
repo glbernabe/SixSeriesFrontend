@@ -18,7 +18,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextStyle
@@ -33,6 +32,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.six.series.AppRoute
 import org.six.series.application.usecases.user.LogOutUseCase
+import org.six.series.infrastructure.TokenStorage
 import org.six.series.model.NavigationItem
 import org.six.series.ui.components.main.MainRoutes
 import sixseries.composeapp.generated.resources.Res
@@ -40,14 +40,12 @@ import sixseries.composeapp.generated.resources.ic_bullet_List
 import sixseries.composeapp.generated.resources.ic_magnifying_Glass
 import sixseries.composeapp.generated.resources.ic_user_Circle_Single
 
-
-// ALL THE ICONS FOR THE UI ON THE TOP BAR
 val navItems = listOf(
-    NavigationItem(null, MainRoutes.Principal, "Inicio"),
-    NavigationItem(null, MainRoutes.Movies, "Películas"),
-    NavigationItem(null, MainRoutes.Series, "Series"),
-    NavigationItem(Res.drawable.ic_magnifying_Glass, MainRoutes.Search),
-    NavigationItem(Res.drawable.ic_bullet_List, MainRoutes.Genres),
+    NavigationItem(null,                              MainRoutes.Principal,    "Inicio"),
+    NavigationItem(null,                              MainRoutes.Movies,       "Películas"),
+    NavigationItem(null,                              MainRoutes.Series,       "Series"),
+    NavigationItem(Res.drawable.ic_magnifying_Glass,  MainRoutes.Search),
+    NavigationItem(Res.drawable.ic_bullet_List,       MainRoutes.Genres),
     NavigationItem(Res.drawable.ic_user_Circle_Single, MainRoutes.Profile)
 )
 
@@ -57,6 +55,8 @@ fun AdaptiveTopBar(
     navController: NavController,
     rootNavController: NavController
 ) {
+    val tokenStorage = koinInject<TokenStorage>()
+    val hasSession = remember { tokenStorage.getAccessToken() != null }
     val logoutUseCase = koinInject<LogOutUseCase>()
     val scope = rememberCoroutineScope()
     val contentColor = MaterialTheme.colorScheme.onPrimary
@@ -76,7 +76,7 @@ fun AdaptiveTopBar(
     )
 
     val itemTextStyle = TextStyle(
-        fontSize = 20.sp,
+        fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
         color = contentColor,
         shadow = Shadow(
@@ -113,13 +113,10 @@ fun AdaptiveTopBar(
                 val interactionSource = remember { MutableInteractionSource() }
                 val isHovered by interactionSource.collectIsHoveredAsState()
 
-                val animatedBackgroundColor by animateColorAsState(
-                    targetValue = if (isHovered && item.icon != null) {
-                        contentColor.copy(alpha = 0.12f)
-                    } else {
-                        Color.Transparent
-                    },
-                    animationSpec = tween(durationMillis = 200)
+                val animatedBg by animateColorAsState(
+                    targetValue = if (isHovered && item.icon != null) contentColor.copy(alpha = 0.12f)
+                    else Color.Transparent,
+                    animationSpec = tween(200)
                 )
 
                 Box(
@@ -130,30 +127,29 @@ fun AdaptiveTopBar(
                             interactionSource = interactionSource,
                             indication = null
                         ) {
-                            if (item.icon == Res.drawable.ic_user_Circle_Single) {
-                                scope.launch {
-                                    logoutUseCase.logout()
-                                        .onSuccess {
-                                            errorMessage = "Sesión cerrada correctamente"
-                                            rootNavController.navigate(AppRoute.Login) {
-                                                popUpTo(0)
-                                            }
+                            when {
+                                // Profile icon → navigate to profile screen (no logout)
+                                item.icon == Res.drawable.ic_user_Circle_Single -> {
+                                    try {
+                                        navController.navigate(MainRoutes.Profile) {
+                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        .onFailure {
-                                            errorMessage = "Error al intentar cerrar sesión"
-                                        }
-                                }
-                            } else {
-                                try {
-                                    navController.navigate(item.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
+                                    } catch (ex: Exception) {
+                                        errorMessage = "No se pudo abrir el perfil"
                                     }
-                                } catch (ex: Exception) {
-                                    errorMessage = "No se pudo abrir ${item.label ?: "la página"}"
+                                }
+                                else -> {
+                                    try {
+                                        navController.navigate(item.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    } catch (ex: Exception) {
+                                        errorMessage = "No se pudo abrir ${item.label ?: "la página"}"
+                                    }
                                 }
                             }
                         }
@@ -169,7 +165,7 @@ fun AdaptiveTopBar(
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .background(color = animatedBackgroundColor, shape = CircleShape),
+                                    .background(color = animatedBg, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -186,13 +182,64 @@ fun AdaptiveTopBar(
                         }
 
                         if (!item.label.isNullOrEmpty()) {
-                            Text(
-                                text = item.label,
-                                style = itemTextStyle
-                            )
+                            Text(text = item.label, style = itemTextStyle)
                         }
                     }
                 }
+            }
+
+            // Switch profile button
+            if (hasSession) {
+                Spacer(Modifier.width(4.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            rootNavController.navigate(AppRoute.ProfileSelector) {
+                                popUpTo(AppRoute.Main) { inclusive = true }
+                            }
+                        }
+                        .pointerHoverIcon(PointerIcon.Hand)
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        "Cambiar perfil",
+                        style = itemTextStyle.copy(
+                            color = contentColor.copy(alpha = 0.7f),
+                            fontSize = 14.sp
+                        )
+                    )
+                }
+            }
+
+            // Logout button
+            Spacer(Modifier.width(4.dp))
+            Box(
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        if (hasSession) {
+                            scope.launch {
+                                logoutUseCase.logout()
+                                    .onSuccess {
+                                        rootNavController.navigate(AppRoute.Login) { popUpTo(0) }
+                                    }
+                            }
+                        } else {
+                            rootNavController.navigate(AppRoute.Login) { popUpTo(0) }
+                        }
+                    }
+                    .pointerHoverIcon(PointerIcon.Hand)
+                    .padding(8.dp)
+            ) {
+                Text(
+                    if (hasSession) "Salir" else "Iniciar sesión",
+                    style = itemTextStyle.copy(
+                        color = contentColor.copy(alpha = 0.7f),
+                        fontSize = 14.sp
+                    )
+                )
             }
         }
 

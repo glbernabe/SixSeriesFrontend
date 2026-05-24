@@ -14,25 +14,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import org.six.series.model.content.Content
+import org.six.series.model.content.ContentType
 import org.six.series.ui.components.basic.carousel.CarouselMovies
 import org.six.series.ui.components.basic.content.ContentRow
 import org.six.series.ui.components.viewmodels.MainUiState
-import org.six.series.model.content.ContentType
-val gradientColors =
-    listOf(
-        Color.Black.copy(alpha = 0.8f),
-        Color.Transparent
-    )
+
+val gradientColors = listOf(
+    Color.Black.copy(alpha = 0.8f),
+    Color.Transparent
+)
+
 @Composable
-fun HeroScreen(state: MainUiState) {
+fun HeroScreen(
+    state: MainUiState,
+    onPlayContent: (Content) -> Unit = {}
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.radialGradient(
-                    colors = gradientColors
-                )
-            ),
+            .background(brush = Brush.radialGradient(colors = gradientColors)),
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         when (state) {
@@ -43,40 +44,33 @@ fun HeroScreen(state: MainUiState) {
             is MainUiState.Success -> {
                 val moviesWithLogo = state.movies.filter { !it.logoURL.isNullOrBlank() }
 
-                val cinema = state.movies.filter { it.type == ContentType.Movie }.shuffled()
-                val series = state.movies.filter { it.type == ContentType.Series }.shuffled()
+                val cinema       = state.movies.filter { it.type == ContentType.Movie }.shuffled()
+                val series       = state.movies.filter { it.type == ContentType.Series }.shuffled()
                 val documentaries = state.movies.filter { it.type == ContentType.Documentary }.shuffled()
 
-                val carousel = if (moviesWithLogo.size >= 5) {
-                    moviesWithLogo.shuffled().take(5)
-                } else {
-                    moviesWithLogo.shuffled()
-                }
+                val carousel = if (moviesWithLogo.size >= 5) moviesWithLogo.shuffled().take(5)
+                else moviesWithLogo.shuffled()
 
                 item {
                     Box(modifier = Modifier.background(MaterialTheme.colorScheme.onBackground)) {
-                        CarouselMovies(content = carousel)
+                        CarouselMovies(content = carousel, onPlayContent = onPlayContent)
                     }
-
-                    //Line between the Hero and the rest of the content
                     Box(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                             .fillMaxWidth()
-                        .height(18.dp),
+                            .height(18.dp)
                     )
                 }
 
                 item {
-                    ContentRow(title = "Películas", movies = cinema) { /* Navigate */ }
+                    ContentRow(title = "Películas",    movies = cinema,         onMovieClick = { onPlayContent(it) })
                 }
-
                 item {
-                    ContentRow(title = "Series", movies = series) { /* Navigate */ }
+                    ContentRow(title = "Series",       movies = series,         onMovieClick = { onPlayContent(it) })
                 }
-
                 item {
-                    ContentRow(title = "Documentales", movies = documentaries) { /* Navigate */ }
+                    ContentRow(title = "Documentales", movies = documentaries,  onMovieClick = { onPlayContent(it) })
                 }
             }
 

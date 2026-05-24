@@ -55,7 +55,7 @@ fun ContentRow(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(movies) { movie ->
-                    ContentCard(content = movie)
+                    ContentCard(content = movie, onClick = { onMovieClick(movie) })
                 }
             }
 

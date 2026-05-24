@@ -8,8 +8,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,11 +19,14 @@ import androidx.navigation.compose.rememberNavController
 import coil3.SingletonImageLoader
 import coil3.compose.LocalPlatformContext
 import org.koin.mp.KoinPlatform.getKoin
+import org.six.series.model.content.Content
 import org.six.series.ui.components.basic.AdaptiveTopBar
 import org.six.series.ui.components.basic.HeroScreen
 import org.six.series.ui.components.basic.genre.GenresGrid
+import org.six.series.ui.components.screens.ProfileScreen
+import org.six.series.ui.components.screens.SubscriptionScreen
+import org.six.series.ui.components.screens.VideoPlayerScreen
 import org.six.series.ui.components.viewmodels.MainPageViewModel
-import org.six.series.ui.components.viewmodels.MainUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +43,9 @@ fun MainComponent(rootNavController: NavController) {
             getGenresUseCase = getKoin().get()
         )
     }
+
+    // Track content to play (lifted here so the dialog can overlay everything)
+    var contentToPlay by remember { mutableStateOf<Content?>(null) }
 
     Scaffold(
         topBar = {
@@ -61,7 +66,10 @@ fun MainComponent(rootNavController: NavController) {
                 startDestination = MainRoutes.Principal
             ) {
                 composable(MainRoutes.Principal) {
-                    HeroScreen(state = viewModel.uiState)
+                    HeroScreen(
+                        state = viewModel.uiState,
+                        onPlayContent = { content -> contentToPlay = content }
+                    )
                 }
 
                 composable(MainRoutes.Movies) {
@@ -81,10 +89,22 @@ fun MainComponent(rootNavController: NavController) {
                 }
 
                 composable(MainRoutes.Profile) {
-                    PlaceholderScreen("Perfil de Usuario")
+                    ProfileScreen()
+                }
+
+                composable(MainRoutes.Subscription) {
+                    SubscriptionScreen()
                 }
             }
         }
+    }
+
+    // Video player overlay
+    contentToPlay?.let { content ->
+        VideoPlayerScreen(
+            content = content,
+            onClose = { contentToPlay = null }
+        )
     }
 }
 
