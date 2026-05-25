@@ -38,6 +38,11 @@ class AppViewModel(
             settings.updateColor(colorHex)
         }
     }
+
+    // Called when a profile is selected in ProfileSelectorScreen
+    fun setColorFromProfile(colorLong: Long) {
+        updateAppColor(colorLong)
+    }
     private val _startDestination = MutableStateFlow<String?>(null)
     val startDestination: StateFlow<String?> = _startDestination
 
@@ -54,13 +59,13 @@ class AppViewModel(
                 val token = TokenJwt(access)
                 if (token.isSessionValid()) {
                     // Valid Token
-                    _startDestination.value = AppRoute.Main
+                    _startDestination.value = AppRoute.ProfileSelector
                 } else if (!refresh.isNullOrEmpty()) {
                     // Access token expired -> Refresh
                     val newTokens = tryRefreshToken(refresh)
                     if (newTokens != null) {
                         tokenStorage.saveTokens(newTokens.access_token!!, newTokens.refresh_token!!)
-                        _startDestination.value = AppRoute.Main
+                        _startDestination.value = AppRoute.ProfileSelector
                     } else {
                         // Refresh token expired -> Login again
                         _startDestination.value = AppRoute.Login

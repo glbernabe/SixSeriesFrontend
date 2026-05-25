@@ -48,7 +48,6 @@ import org.six.series.model.NavigationItem
 import org.six.series.ui.components.main.MainRoutes
 import sixseries.composeapp.generated.resources.Res
 import sixseries.composeapp.generated.resources.ic_Grid
-import sixseries.composeapp.generated.resources.ic_bullet_List
 import sixseries.composeapp.generated.resources.ic_magnifying_Glass
 import sixseries.composeapp.generated.resources.ic_user_Circle_Single
 
@@ -69,9 +68,10 @@ fun AdaptiveTopBar(
     navController: NavController,
     rootNavController: NavController
 ) {
+    val tokenStorage = koinInject<TokenStorage>()
+    val hasSession = remember { tokenStorage.getAccessToken() != null }
     val logoutUseCase = koinInject<LogOutUseCase>()
     // Single Source of Truth for session data injection
-    val tokenStorage = koinInject<TokenStorage>()
     val scope = rememberCoroutineScope()
     val contentColor = MaterialTheme.colorScheme.onPrimary
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -129,12 +129,9 @@ fun AdaptiveTopBar(
                 val isHovered by interactionSource.collectIsHoveredAsState()
 
                 val animatedBackgroundColor by animateColorAsState(
-                    targetValue = if (isHovered && item.icon != null) {
-                        contentColor.copy(alpha = 0.12f)
-                    } else {
-                        Color.Transparent
-                    },
-                    animationSpec = tween(durationMillis = 200)
+                    targetValue = if (isHovered && item.icon != null) contentColor.copy(alpha = 0.12f)
+                    else Color.Transparent,
+                    animationSpec = tween(200)
                 )
 
                 Box(
@@ -217,6 +214,16 @@ fun AdaptiveTopBar(
                                 userData = userData,
                                 backgroundColor = Color.Transparent,
                                 elevation = 0.dp,
+                                onChangeProfileClick = {
+                                    rootNavController.navigate(AppRoute.ProfileSelector) {
+                                        popUpTo(AppRoute.Main) { inclusive = true }
+                                    }
+                                },
+                                onAccountSettingsClick = {
+                                    showUserMenu = false
+                                    navController.navigate(MainRoutes.Profile) {popUpTo(0)}
+
+                                },
                                 onSignOutClick = {
                                     showUserMenu = false
                                     scope.launch {
@@ -260,7 +267,9 @@ fun DisplayPanelOptions(
     userData: UserTokenData? = null,
     backgroundColor: Color = Color.Transparent,
     elevation: Dp = 0.dp,
-    onSignOutClick: () -> Unit,
+    onChangeProfileClick: () -> Unit,
+    onAccountSettingsClick: () -> Unit,
+    onSignOutClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -289,9 +298,9 @@ fun DisplayPanelOptions(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                StreamingOptionItem(icon = Icons.Default.AccountCircle, label = "Perfiles") { }
+                StreamingOptionItem(icon = Icons.Default.AccountCircle, label = "Perfiles") { onChangeProfileClick() }
                 StreamingOptionItem(icon = Icons.Default.List, label = "Mis Listas") { }
-                StreamingOptionItem(icon = Icons.Default.Settings, label = "Ajustes") { }
+                StreamingOptionItem(icon = Icons.Default.Settings, label = "Ajustes") { onAccountSettingsClick() }
                 StreamingOptionItem(icon = Icons.Default.ExitToApp, label = "Cerrar Sesión") { onSignOutClick() }
             }
 

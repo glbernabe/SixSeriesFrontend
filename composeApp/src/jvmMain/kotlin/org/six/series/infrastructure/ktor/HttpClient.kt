@@ -59,10 +59,7 @@ fun createHttpClient(tokenStorage: TokenStorage, refreshUrl: String): HttpClient
         // Auth
         install(Auth) {
             bearer {
-                sendWithoutRequest { request ->
-                    val path = request.url.encodedPath
-                    path.startsWith("/api/public") || path.startsWith("/api/auth")
-                }
+                sendWithoutRequest { true }
 
                 // Cargar tokens desde TokenStorage
                 loadTokens {

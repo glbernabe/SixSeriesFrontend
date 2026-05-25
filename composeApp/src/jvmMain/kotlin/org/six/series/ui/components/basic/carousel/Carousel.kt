@@ -33,7 +33,8 @@ val gradientColors = listOf(
 
 @Composable
 fun CarouselMovies(
-    content: List<Content>
+    content: List<Content>,
+    onPlayContent: (Content) -> Unit = {}
 ) {
     val pagerState = rememberPagerState(pageCount = { content.size })
     val scope = rememberCoroutineScope()
@@ -76,7 +77,8 @@ fun CarouselMovies(
                 CarouselInfoPanel(
                     itemTextStyle = itemTextStyle,
                     modifier = Modifier.weight(1f),
-                    content = content[page]
+                    content = content[page],
+                    onPlayContent = onPlayContent
                 )
 
                 Box(modifier = Modifier.weight(2f)) {
