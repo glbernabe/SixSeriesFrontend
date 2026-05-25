@@ -47,6 +47,7 @@ import org.six.series.infrastructure.UserTokenData
 import org.six.series.model.NavigationItem
 import org.six.series.ui.components.main.MainRoutes
 import sixseries.composeapp.generated.resources.Res
+import sixseries.composeapp.generated.resources.ic_Grid
 import sixseries.composeapp.generated.resources.ic_bullet_List
 import sixseries.composeapp.generated.resources.ic_magnifying_Glass
 import sixseries.composeapp.generated.resources.ic_user_Circle_Single
@@ -58,7 +59,7 @@ val navItems = listOf(
     NavigationItem(null, MainRoutes.Movies, "Películas"),
     NavigationItem(null, MainRoutes.Series, "Series"),
     NavigationItem(Res.drawable.ic_magnifying_Glass, MainRoutes.Search),
-    NavigationItem(Res.drawable.ic_bullet_List, MainRoutes.Genres),
+    NavigationItem(Res.drawable.ic_Grid, MainRoutes.Genres),
     NavigationItem(Res.drawable.ic_user_Circle_Single, MainRoutes.Profile)
 )
 

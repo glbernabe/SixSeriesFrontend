@@ -57,12 +57,11 @@ class MainPageViewModel(
             val contentResult = contentDeferred.await()
             val genresResult = genresDeferred.await()
 
-            if (contentResult.isSuccess && genresResult.isSuccess) {
+            if (contentResult.isSuccess) {
                 val movies = contentResult.getOrThrow()
-                val genres = genresResult.getOrThrow()
+                val genres = genresResult.getOrElse { emptyList() }
 
                 uiState = MainUiState.Success(movies, genres)
-
                 preloadImages(movies.take(5))
             } else {
                 uiState = MainUiState.Error("Error al cargar los datos del servidor")
