@@ -3,6 +3,7 @@ package org.six.series.ui.components.login
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,10 +26,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val BgDeep      = Color(0xFF0A0A0A)
 private val BgCard      = Color(0xFF161616)
 private val BorderIdle  = Color(0xFF2A2A2A)
 private val TextPrimary = Color(0xFFEEEEEE)
@@ -41,7 +42,8 @@ fun LoginComponent(
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
     onCancel: () -> Unit,
-    onRegister: () -> Unit          // ← nuevo
+    onRegister: () -> Unit,
+    onRetryClick: () -> Unit
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val focusManager = LocalFocusManager.current
@@ -52,16 +54,18 @@ fun LoginComponent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgDeep),
+            .background(BgCard),
         contentAlignment = Alignment.Center
     ) {
-        // Radial glow
         Box(
             modifier = Modifier
                 .size(480.dp)
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(primaryColor.copy(alpha = 0.10f), Color.Transparent)
+                        colors = listOf(
+                            primaryColor.copy(alpha = 0.10f),
+                            Color.Transparent
+                        )
                     )
                 )
         )
@@ -75,10 +79,9 @@ fun LoginComponent(
                     .widthIn(max = 420.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(0.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Brand
+
                 Text(
                     text = "SIX SERIES",
                     style = TextStyle(
@@ -106,7 +109,6 @@ fun LoginComponent(
 
                 Spacer(Modifier.height(36.dp))
 
-                // Card
                 Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = BgCard,
@@ -119,6 +121,7 @@ fun LoginComponent(
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+
                         Text(
                             "Iniciar sesión",
                             fontSize = 20.sp,
@@ -126,56 +129,85 @@ fun LoginComponent(
                             color = TextPrimary
                         )
 
-                        StyledTextField(
-                            value = state.username,
-                            onValueChange = onUsernameChange,
-                            label = "Nombre de usuario",
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                            ),
-                            primaryColor = primaryColor
-                        )
+                        if (state.isLoading) {
 
-                        StyledTextField(
-                            value = state.password,
-                            onValueChange = onPasswordChange,
-                            label = "Contraseña",
-                            isPassword = true,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = { focusManager.clearFocus(); onLoginClick() }
-                            ),
-                            primaryColor = primaryColor
-                        )
-
-                        // Error
-                        AnimatedVisibility(visible = state.errorMessage != null) {
-                            state.errorMessage?.let { msg ->
-                                Text(
-                                    text = msg,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontSize = 13.sp,
-                                    modifier = Modifier.fillMaxWidth()
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = primaryColor,
+                                    modifier = Modifier.size(44.dp)
                                 )
                             }
-                        }
 
-                        Spacer(Modifier.height(4.dp))
-
-                        if (state.isLoading) {
-                            CircularProgressIndicator(
-                                color = primaryColor,
-                                modifier = Modifier.size(36.dp)
-                            )
                         } else {
-                            // Entrar
+
+                            if (state.errorMessage != null) {
+
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                                    border = BorderStroke(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.error.copy(alpha = 0.35f)
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+
+                                        Text(
+                                            text = state.errorMessage,
+                                            color = MaterialTheme.colorScheme.error,
+                                            fontSize = 14.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                            }
+
+                            StyledTextField(
+                                value = state.username,
+                                onValueChange = onUsernameChange,
+                                label = "Nombre de usuario",
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = {
+                                        focusManager.moveFocus(FocusDirection.Down)
+                                    }
+                                ),
+                                primaryColor = primaryColor
+                            )
+
+                            StyledTextField(
+                                value = state.password,
+                                onValueChange = onPasswordChange,
+                                label = "Contraseña",
+                                isPassword = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        focusManager.clearFocus()
+                                        onLoginClick()
+                                    }
+                                ),
+                                primaryColor = primaryColor
+                            )
+
+                            Spacer(Modifier.height(4.dp))
+
                             Button(
                                 onClick = onLoginClick,
                                 modifier = Modifier
@@ -187,17 +219,20 @@ fun LoginComponent(
                                     contentColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             ) {
-                                Text("Entrar", fontSize = 15.sp, fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp)
+                                Text(
+                                    "Entrar",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp
+                                )
                             }
 
-                            // Separador
+
                             HorizontalDivider(
-                                color = Color(0xFF2A2A2A),
+                                color = BorderIdle,
                                 modifier = Modifier.padding(vertical = 4.dp)
                             )
 
-                            // Registrarse
                             TextButton(
                                 onClick = onRegister,
                                 modifier = Modifier.fillMaxWidth()

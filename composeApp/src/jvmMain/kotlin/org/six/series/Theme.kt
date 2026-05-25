@@ -27,8 +27,10 @@ val ProfileGreen = Color(0xFF7ED957)
  */
 val GhostWhite = Color(0xFFFCFCFC)
 fun Color.contrastingColor(): Color {
-    // Luminance returns a value between 0.0 (darkest) and 1.0 (lightest)
-    return if (this.luminance() > 0.5f) Color.Black else GhostWhite
+    // Calculates the relative luminance according to W3C WCAG 2.0 standards
+    val formulaLuminance = 0.2126f * this.red + 0.7152f * this.green + 0.0722f * this.blue
+    // Using 0.45f threshold fixes intermediate tones like yellow, green, and pink to contrast perfectly
+    return if (formulaLuminance > 0.45f) Color.Black else GhostWhite
 }
 
 /**
@@ -41,7 +43,7 @@ fun Color.contrastingColorWithAlpha(alpha: Float, backgroundColor: Color = Color
     val blendedBlue = this.blue * alpha + backgroundColor.blue * (1f - alpha)
 
     val blendedColor = Color(red = blendedRed, green = blendedGreen, blue = blendedBlue)
-    return if (blendedColor.luminance() > 0.5f) Color.Black else GhostWhite
+    return blendedColor.contrastingColor()
 }
 
 // --- 3. DYNAMIC SCHEME GENERATOR ---
@@ -53,19 +55,27 @@ fun Color.contrastingColorWithAlpha(alpha: Float, backgroundColor: Color = Color
  * - surfaceVariant: Used by Cards and TextFields; here it's kept neutral but can be tinted.
  */
 fun profileScheme(baseColor: Color): ColorScheme {
-    val isLight = baseColor.luminance() > 0.5f
+    val formulaLuminance = 0.2126f * baseColor.red + 0.7152f * baseColor.green + 0.0722f * baseColor.blue
+    val isLight = formulaLuminance > 0.45f
 
-    val onPrimaryColor = baseColor.contrastingColor()
-    val secondaryColor = baseColor.copy(alpha = 0.7f)
+    // Adjust extremely light or dark base colors to guarantee proper contrast on default backgrounds
+    val adjustedBaseColor = when {
+        isLight && formulaLuminance > 0.85f -> baseColor.copy(red = baseColor.red * 0.85f, green = baseColor.green * 0.85f, blue = baseColor.blue * 0.85f)
+        !isLight && formulaLuminance < 0.1f -> baseColor.copy(red = baseColor.red + 0.15f, green = baseColor.green + 0.15f, blue = baseColor.blue + 0.15f)
+        else -> baseColor
+    }
+
+    val onPrimaryColor = adjustedBaseColor.contrastingColor()
+    val secondaryColor = adjustedBaseColor.copy(alpha = 0.7f)
 
     // Calculates the real contrast considering the 70% opacity over the standard background
-    val onSecondaryColor = baseColor.contrastingColorWithAlpha(alpha = 0.7f)
+    val onSecondaryColor = adjustedBaseColor.contrastingColorWithAlpha(alpha = 0.7f)
 
-    val primaryContainerColor = if (isLight) baseColor.copy(alpha = 0.25f) else baseColor.copy(alpha = 0.15f)
-    val onPrimaryContainerColor = if (isLight) Color.Black else baseColor
+    val primaryContainerColor = if (isLight) adjustedBaseColor.copy(alpha = 0.25f) else adjustedBaseColor.copy(alpha = 0.15f)
+    val onPrimaryContainerColor = if (isLight) Color.Black else adjustedBaseColor
 
     return lightColorScheme(
-        primary = baseColor,
+        primary = adjustedBaseColor,
         onPrimary = onPrimaryColor,
 
         // Primary Container: Used for less prominent highlights

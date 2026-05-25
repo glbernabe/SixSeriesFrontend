@@ -12,7 +12,6 @@ import org.six.series.application.usecases.profile.UpdateProfileUseCase
 import org.six.series.model.profile.Profile
 import org.six.series.model.profile.ProfileUpdateRequest
 import org.six.series.ui.appsettings.AppViewModel
-
 sealed class ProfileUiState {
     object Loading : ProfileUiState()
     object NoProfile : ProfileUiState()
@@ -33,7 +32,6 @@ class ProfileViewModel(
     private val _saveSuccess = MutableStateFlow<String?>(null)
     val saveSuccess: StateFlow<String?> = _saveSuccess.asStateFlow()
 
-    // load first profile from the list
     fun loadProfile() {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
@@ -58,7 +56,6 @@ class ProfileViewModel(
         }
     }
 
-    // update app color and save it to the profile on the server
     fun updateColor(colorLong: Long) {
         appViewModel.updateAppColor(colorLong)
         val state = _uiState.value
@@ -68,18 +65,22 @@ class ProfileViewModel(
                 updateProfileUseCase(
                     state.profile.id,
                     ProfileUpdateRequest(name = state.profile.name, themeColor = hexColor)
-                )
+                ).onSuccess { updated ->
+                    _uiState.value = ProfileUiState.Success(updated)
+                }
             }
         }
     }
 
-    // save name changes
     fun saveChanges(newName: String) {
         val state = _uiState.value as? ProfileUiState.Success ?: return
         viewModelScope.launch {
+            val currentColorLong = appViewModel.appColor.value
+            val hexColor = "#%06X".format(currentColorLong and 0xFFFFFF)
+
             updateProfileUseCase(
                 state.profile.id,
-                ProfileUpdateRequest(name = newName)
+                ProfileUpdateRequest(name = newName, themeColor = hexColor)
             ).onSuccess { updated ->
                 _uiState.value = ProfileUiState.Success(updated)
                 _saveSuccess.value = "Perfil guardado correctamente"
@@ -89,7 +90,6 @@ class ProfileViewModel(
         }
     }
 
-    // create a new profile with default gray color
     fun createProfile(name: String) {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading

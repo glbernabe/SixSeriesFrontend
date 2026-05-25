@@ -32,7 +32,7 @@ class RestProfileRepository(
 
     override suspend fun updateProfile(id: String, request: ProfileUpdateRequest): Result<Profile> {
         return try {
-            val profile = cliente.patch("$url/$id/") {
+            val profile = cliente.put("$url/$id/") {
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }.body<Profile>()

@@ -40,7 +40,7 @@ fun ContentRow(
         Text(
             text = title,
             style = TextStyle(
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = Color.White,
                 fontSize = 32.sp
             ),
             modifier = Modifier

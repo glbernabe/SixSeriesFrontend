@@ -26,7 +26,7 @@ fun App() {
     val appViewModel: AppViewModel = koinViewModel()
     val navController = rememberNavController()
     val startDestination by appViewModel.startDestination.collectAsState()
-    val appColorLong by appViewModel.currentHexColor.collectAsState()
+    val appColorLong by appViewModel.appColor.collectAsState()
 
     if (startDestination == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

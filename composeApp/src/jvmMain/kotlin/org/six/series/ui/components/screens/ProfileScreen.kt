@@ -60,24 +60,19 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    //val selectedFile by viewModel.selectedFile.collectAsState()
     val saveSuccess by viewModel.saveSuccess.collectAsState()
     val scope = rememberCoroutineScope()
 
-    // Local UI state
     var nameField by remember { mutableStateOf("") }
-    //var imageBytes by remember(selectedFile) { mutableStateOf<ByteArray?>(null) }
     val primaryColor = MaterialTheme.colorScheme.primary
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
-    // Sync name field when profile loads
     LaunchedEffect(uiState) {
         if (uiState is ProfileUiState.Success) {
             nameField = (uiState as ProfileUiState.Success).profile.name
         }
     }
-    // Show snackbar on save
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(saveSuccess) {
         saveSuccess?.let {
@@ -131,7 +126,6 @@ fun ProfileScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(28.dp)
                 ) {
-                    // Header
                     Text(
                         "Mi Perfil",
                         fontSize = 28.sp,
@@ -139,9 +133,6 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-
-
-                    // ── Name Section ──
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -174,7 +165,6 @@ fun ProfileScreen(
                         }
                     }
 
-                    // ── Color Palette Section ──
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -195,7 +185,6 @@ fun ProfileScreen(
                                 color = Color(0xFFE6E1E5)
                             )
 
-                            // Color grid (2 rows × 4 cols)
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 profileColorPalette.chunked(4).forEach { row ->
                                     Row(
@@ -214,7 +203,6 @@ fun ProfileScreen(
                                 }
                             }
 
-                            // Preview chip
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -239,7 +227,6 @@ fun ProfileScreen(
                         }
                     }
 
-                    // ── Save Button ──
                     Button(
                         onClick = { viewModel.saveChanges(nameField) },
                         modifier = Modifier
@@ -310,5 +297,7 @@ fun ColorSwatch(
     }
 }
 
-private fun Color.contrastingColor(): Color =
-    if (this.luminance() > 0.5f) Color.Black else Color.White
+private fun Color.contrastingColor(): Color {
+    val formulaLuminance = 0.2126f * this.red + 0.7152f * this.green + 0.0722f * this.blue
+    return if (formulaLuminance > 0.45f) Color.Black else Color.White
+}

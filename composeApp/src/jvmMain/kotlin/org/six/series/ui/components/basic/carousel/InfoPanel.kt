@@ -99,7 +99,7 @@ fun CarouselInfoPanel(
                                 style = TextStyle(
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    color = Color.White,
                                 )
                             )
                         }
@@ -118,7 +118,7 @@ fun CarouselInfoPanel(
                                 style = TextStyle(
                                     fontSize = 26.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    color = Color.White,
                                     textAlign = TextAlign.Justify,
                                     letterSpacing = 0.15.sp,
                                 )

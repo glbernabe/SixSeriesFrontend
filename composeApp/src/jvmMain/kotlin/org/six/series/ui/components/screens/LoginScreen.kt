@@ -36,7 +36,8 @@ fun LoginScreen(
         onPasswordChange = viewModel::onPasswordChange,
         onLoginClick = { viewModel.login() },
         onCancel = onCancel,
-        onRegister = { navController.navigate(AppRoute.Register) }
+        onRegister = { navController.navigate(AppRoute.Register) },
+        onRetryClick = { viewModel.login() },
     )
 
     // Register link positioned via LoginScreen so it stays outside the card
