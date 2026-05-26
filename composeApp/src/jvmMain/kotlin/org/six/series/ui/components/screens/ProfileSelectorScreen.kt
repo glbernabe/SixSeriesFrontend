@@ -1,6 +1,5 @@
 package org.six.series.ui.components.screens
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +35,7 @@ fun ProfileSelectorScreen(
 ) {
     val getProfilesUseCase = koinInject<GetMyProfilesUseCase>()
     val createProfileUseCase = koinInject<CreateProfileUseCase>()
+    val coroutineScope = rememberCoroutineScope()
 
     var profiles by remember { mutableStateOf<List<Profile>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -58,13 +58,24 @@ fun ProfileSelectorScreen(
     ) {
         when {
             isLoading -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-
             error != null -> Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Error: $error", color = MaterialTheme.colorScheme.error)
-                Button(onClick = { error = null; isLoading = true }, colors = profileButtonColors()) {
+                Button(
+                    onClick = {
+                        error = null
+                        isLoading = true
+                        coroutineScope.launch {
+                            getProfilesUseCase()
+                                .onSuccess { profiles = it }
+                                .onFailure { error = it.message }
+                            isLoading = false
+                        }
+                    },
+                    colors = profileButtonColors()
+                ) {
                     Text("Reintentar")
                 }
             }
@@ -134,9 +145,17 @@ fun ProfileSelectorScreen(
         CreateProfileDialog(
             onConfirm = { name ->
                 showCreateDialog = false
-                kotlinx.coroutines.MainScope().launch {
+                // Con la corutinia se puede capturar errores
+                coroutineScope.launch {
                     createProfileUseCase(name)
-                    getProfilesUseCase().onSuccess { profiles = it }
+                        .onSuccess {
+                            // Si se crea bien, refrescamos la lista
+                            getProfilesUseCase().onSuccess { profiles = it }
+                        }
+                        .onFailure { exception ->
+                            // Si falla, se asigna y se muestra
+                            error = exception.message
+                        }
                 }
             },
             onDismiss = { showCreateDialog = false }
@@ -149,8 +168,8 @@ fun ProfileSelectorScreen(
 @Composable
 private fun ProfileCard(profile: Profile, onClick: () -> Unit) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val avatarColor = remember(profile.themeColor) {
-        profile.themeColor?.let { hex ->
+    val avatarColor = remember(profile.profileColor) {
+        profile.profileColor?.let { hex ->
             try {
                 val colorLong = hex.removePrefix("#").toLong(16) or 0xFF000000L
                 Color(colorLong)

@@ -66,7 +66,7 @@ fun App() {
                 composable(AppRoute.ProfileSelector) {
                     ProfileSelectorScreen(
                         onProfileSelected = { profile ->
-                            profile.themeColor?.let { hex ->
+                            profile.profileColor?.let { hex ->
                                 try {
                                     val colorLong = hex.removePrefix("#").toLong(16) or 0xFF000000L
                                     appViewModel.setColorFromProfile(colorLong)

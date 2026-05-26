@@ -8,12 +8,17 @@ data class Profile(
     val id: String,
     @SerialName("user_username") val userUsername: String,
     val name: String,
-    @SerialName("avatar_url") val avatarUrl: String? = null,
-    @SerialName("theme_color") val themeColor: String? = null
+    @SerialName("profile_color") val profileColor: String? = null // Cambiado de theme_color a profile_color
+)
+
+@Serializable
+data class ProfileCreateRequest(
+    val name: String,
+    val color: String
 )
 
 @Serializable
 data class ProfileUpdateRequest(
     val name: String,
-    @SerialName("theme_color") val themeColor: String? = null
+    @SerialName("profile_color") val profileColor: String? = null
 )

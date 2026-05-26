@@ -40,7 +40,7 @@ class ProfileViewModel(
                     val profile = profiles.firstOrNull()
                     if (profile != null) {
                         _uiState.value = ProfileUiState.Success(profile)
-                        profile.themeColor?.let { hex ->
+                        profile.profileColor?.let { hex ->
                             runCatching {
                                 val colorLong = hex.removePrefix("#").toLong(16) or 0xFF000000L
                                 appViewModel.updateAppColor(colorLong)
@@ -64,7 +64,7 @@ class ProfileViewModel(
                 val hexColor = "#%06X".format(colorLong and 0xFFFFFF)
                 updateProfileUseCase(
                     state.profile.id,
-                    ProfileUpdateRequest(name = state.profile.name, themeColor = hexColor)
+                    ProfileUpdateRequest(name = state.profile.name, profileColor = hexColor)
                 ).onSuccess { updated ->
                     _uiState.value = ProfileUiState.Success(updated)
                 }
@@ -80,7 +80,7 @@ class ProfileViewModel(
 
             updateProfileUseCase(
                 state.profile.id,
-                ProfileUpdateRequest(name = newName, themeColor = hexColor)
+                ProfileUpdateRequest(name = newName, profileColor = hexColor)
             ).onSuccess { updated ->
                 _uiState.value = ProfileUiState.Success(updated)
                 _saveSuccess.value = "Perfil guardado correctamente"
