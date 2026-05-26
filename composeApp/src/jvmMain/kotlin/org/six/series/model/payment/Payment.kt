@@ -20,7 +20,7 @@ enum class PaymentStatus {
 data class Payment(
     val id: String,
     @SerialName("subscription_id") val subscriptionId: String,
-    @SerialName("paymentDate") val paymentDate: String,
+    @SerialName("payment_date") val paymentDate: String,
     val method: PaymentMethod,
     val status: PaymentStatus,
     val amount: Float

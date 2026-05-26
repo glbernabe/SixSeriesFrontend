@@ -30,8 +30,8 @@ enum class SubscriptionStatus {
 data class Subscription(
     val id: String,
     @SerialName("user_username") val userUsername: String,
-    @SerialName("startDate") val startDate: String,
-    @SerialName("endDate") val endDate: String,
+    @SerialName("start_date") val startDate: String,
+    @SerialName("end_date") val endDate: String,
     val status: SubscriptionStatus? = null,
     val type: SubscriptionType
 )

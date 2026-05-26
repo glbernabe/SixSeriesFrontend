@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import org.six.series.model.subscription.ISubscriptionRepository
@@ -18,10 +19,22 @@ class RestSubscriptionRepository(
 
     override suspend fun getMySubscription(): Result<Subscription?> {
         return try {
-            val sub = cliente.get("$url/me/") {
+            val response = cliente.get("$url/me/") {
                 contentType(ContentType.Application.Json)
-            }.body<Subscription>()  // era body<List<Subscription>>()
-            Result.success(sub)
+            }
+
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    val sub = response.body<Subscription>()
+                    Result.success(sub)
+                }
+                HttpStatusCode.NotFound -> {
+                    Result.success(null)
+                }
+                else -> {
+                    Result.failure(Exception("Error de servidor: Código de error ${response.status.value}"))
+                }
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -36,7 +49,7 @@ class RestSubscriptionRepository(
             if (response.status.isSuccess()) {
                 Result.success(response.body<Subscription>())
             } else {
-                Result.failure(Exception("Error al crear suscripción"))
+                Result.failure(Exception("Fallo en crear una subscripción: Código de error ${response.status.value}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -45,10 +58,14 @@ class RestSubscriptionRepository(
 
     override suspend fun cancelSubscription(id: String): Result<Unit> {
         return try {
-            cliente.delete("$url/me/") {
+            val response = cliente.delete("$url/me/") {
                 contentType(ContentType.Application.Json)
             }
-            Result.success(Unit)
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Fallo en cancelar una subscripción: Código de error ${response.status.value}"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -22,7 +22,7 @@ sealed class SubscriptionUiState {
     data class Success(
         val subscription: Subscription?,
         val payments: List<Payment>,
-        val showingPlanSelector: Boolean = false   // ← nuevo campo
+        val showingPlanSelector: Boolean = true
     ) : SubscriptionUiState()
     data class Error(val message: String) : SubscriptionUiState()
 }
