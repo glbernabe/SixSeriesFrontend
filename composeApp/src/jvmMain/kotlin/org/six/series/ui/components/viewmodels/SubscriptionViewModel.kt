@@ -15,6 +15,7 @@ import org.six.series.model.payment.Payment
 import org.six.series.model.payment.PaymentMethod
 import org.six.series.model.payment.PaymentRequest
 import org.six.series.model.subscription.Subscription
+import org.six.series.model.subscription.SubscriptionStatus
 import org.six.series.model.subscription.SubscriptionType
 
 sealed class SubscriptionUiState {
@@ -49,6 +50,9 @@ class SubscriptionViewModel(
     private val _pendingType = MutableStateFlow<SubscriptionType?>(null)
     val pendingType: StateFlow<SubscriptionType?> = _pendingType.asStateFlow()
 
+    private val _paymentError = MutableStateFlow<String?>(null)
+    val paymentError: StateFlow<String?> = _paymentError.asStateFlow()
+
     fun load() {
         viewModelScope.launch {
             _uiState.value = SubscriptionUiState.Loading
@@ -65,7 +69,6 @@ class SubscriptionViewModel(
         }
     }
 
-    // Muestra el selector de plan aunque haya sub activa (para cambiar de plan)
     fun requestChangePlan() {
         val current = _uiState.value as? SubscriptionUiState.Success ?: return
         _uiState.value = current.copy(showingPlanSelector = true)
@@ -74,16 +77,19 @@ class SubscriptionViewModel(
     fun requestSubscription(type: SubscriptionType) {
         _pendingType.value = type
         _showPaymentDialog.value = true
+        _paymentError.value = null
     }
 
     fun dismissPaymentDialog() {
         _showPaymentDialog.value = false
         _pendingType.value = null
+        _paymentError.value = null
     }
 
     fun confirmPayment(method: PaymentMethod) {
         val type = _pendingType.value ?: return
-        _showPaymentDialog.value = false
+        _paymentError.value = null
+
         viewModelScope.launch {
             createSubscriptionUseCase(type)
                 .onSuccess { sub ->
@@ -96,16 +102,38 @@ class SubscriptionViewModel(
                     makePaymentUseCase(PaymentRequest(sub.id, method, amount))
                         .onSuccess {
                             _actionMessage.value = "¡Suscripción activada correctamente!"
+                            _showPaymentDialog.value = false // Solo cerramos el diálogo si el pago es exitoso
+                            _pendingType.value = null
                             load()
                         }
-                        .onFailure {
-                            _actionMessage.value = "Pago fallido. Inténtalo de nuevo."
+                        .onFailure { exception ->
+                            _paymentError.value = exception.message ?: "Pago fallido. Inténtalo de nuevo."
                         }
                 }
-                .onFailure {
-                    _actionMessage.value = "Error al crear la suscripción"
+                .onFailure { exception ->
+                    _paymentError.value = exception.message ?: "Error al crear la suscripción"
                 }
-            _pendingType.value = null
+        }
+    }
+
+    fun cancelPendingSubscription() {
+        val state = _uiState.value as? SubscriptionUiState.Success ?: return
+        val currentSub = state.subscription ?: return
+
+        if (currentSub.status != SubscriptionStatus.Pending) return
+
+        dismissPaymentDialog()
+
+        viewModelScope.launch {
+            cancelSubscriptionUseCase(currentSub.id)
+                .onSuccess {
+                    _actionMessage.value = "Suscripción pendiente cancelada con éxito."
+                    load() // Refresca la lista de planes en segundo plano
+                }
+                .onFailure { exception ->
+                    _actionMessage.value = exception.message ?: "Error al descartar la suscripción pendiente."
+                    load() // Recargamos toda la UI
+                }
         }
     }
 

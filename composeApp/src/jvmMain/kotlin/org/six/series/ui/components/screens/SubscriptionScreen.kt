@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -30,12 +31,16 @@ import org.six.series.ui.components.viewmodels.SubscriptionViewModel
 @Composable
 fun SubscriptionScreen(
     viewModel: SubscriptionViewModel = koinViewModel(),
-    onBack: (() -> Unit)? = null   // null cuando se usa desde el TopBar de Main
+    onBack: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val showPaymentDialog by viewModel.showPaymentDialog.collectAsState()
     val pendingType by viewModel.pendingType.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
+
+    // Recolectamos el estado de error de pago para pasárselo al diálogo
+    val paymentError by viewModel.paymentError.collectAsState()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -82,7 +87,6 @@ fun SubscriptionScreen(
                         .padding(horizontal = 32.dp, vertical = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(28.dp)
                 ) {
-                    // Cabecera con botón de volver opcional
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -101,17 +105,12 @@ fun SubscriptionScreen(
                         )
                     }
 
-                    // Estado actual
                     CurrentSubscriptionCard(
                         subscription = data.subscription,
                         onCancel = { viewModel.cancelSubscription() },
-                        onChangePlan = {
-                            // Fuerza mostrar selector de plan aunque haya sub activa
-                            viewModel.requestChangePlan()
-                        }
+                        onChangePlan = { viewModel.requestChangePlan() }
                     )
 
-                    // Selector de plan: sin sub activa O si el usuario pide cambiar
                     val showPlanSelector = data.subscription?.status != SubscriptionStatus.Active
                             || data.showingPlanSelector
                     if (showPlanSelector) {
@@ -144,7 +143,6 @@ fun SubscriptionScreen(
                         }
                     }
 
-                    // Historial de pagos
                     if (data.payments.isNotEmpty()) {
                         Text(
                             "Historial de pagos",
@@ -164,8 +162,10 @@ fun SubscriptionScreen(
     if (showPaymentDialog && pendingType != null) {
         PaymentMethodDialog(
             subscriptionType = pendingType!!,
+            errorMessage = paymentError,
             onConfirm = { method -> viewModel.confirmPayment(method) },
-            onDismiss = { viewModel.dismissPaymentDialog() }
+            onDismiss = { viewModel.dismissPaymentDialog() },
+            onCancelPendingSubscription = { viewModel.cancelPendingSubscription() }
         )
     }
 }
@@ -235,7 +235,6 @@ fun CurrentSubscriptionCard(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Cambiar plan
                         Button(
                             onClick = onChangePlan,
                             modifier = Modifier.weight(1f),
@@ -244,7 +243,6 @@ fun CurrentSubscriptionCard(
                         ) {
                             Text("Cambiar plan")
                         }
-                        // Cancelar suscripción
                         OutlinedButton(
                             onClick = onCancel,
                             modifier = Modifier.weight(1f),
@@ -274,7 +272,6 @@ fun PlanCard(
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    // Tipos que corresponden a este plan
     val monthlyType = if (displayName == "Estándar") SubscriptionType.Standard else SubscriptionType.Premium
     val yearlyType  = if (displayName == "Estándar") SubscriptionType.StandardYearly else SubscriptionType.PremiumYearly
     val isCurrentMonthly = currentType == monthlyType
@@ -393,13 +390,16 @@ fun PaymentHistoryItem(payment: Payment) {
 @Composable
 fun PaymentMethodDialog(
     subscriptionType: SubscriptionType,
+    errorMessage: String?,
     onConfirm: (PaymentMethod) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onCancelPendingSubscription: () -> Unit
 ) {
     var selectedMethod by remember { mutableStateOf(PaymentMethod.Card) }
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    Dialog(onDismissRequest = onDismiss) {
+    // Si hay un error de pago activo, deshabilitamos el cierre accidental clickeando fuera
+    Dialog(onDismissRequest = { if (errorMessage == null) onDismiss() }) {
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -409,7 +409,12 @@ fun PaymentMethodDialog(
                 modifier = Modifier.padding(28.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Método de pago", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = primaryColor)
+                Text(
+                    text = if (errorMessage != null) "Fallo en el pago" else "Método de pago",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = if (errorMessage != null) MaterialTheme.colorScheme.error else primaryColor
+                )
                 val planLabel = when (subscriptionType) {
                     SubscriptionType.Standard       -> "Estándar Mensual — 7.99 €"
                     SubscriptionType.Premium        -> "Premium Mensual — 13.99 €"
@@ -418,29 +423,72 @@ fun PaymentMethodDialog(
                 }
                 Text(planLabel, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 HorizontalDivider()
-                PaymentMethodOption(
-                    label = "💳 Tarjeta de crédito / débito",
-                    isSelected = selectedMethod == PaymentMethod.Card,
-                    onSelect = { selectedMethod = PaymentMethod.Card }
-                )
-                PaymentMethodOption(
-                    label = "🅿 PayPal",
-                    isSelected = selectedMethod == PaymentMethod.PayPal,
-                    onSelect = { selectedMethod = PaymentMethod.PayPal }
-                )
-                Spacer(Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-                        Text("Cancelar")
+
+                if (errorMessage != null) {
+                    // Estado Alternativo: Se ha interceptado un error en la transacción
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), RoundedCornerShape(10.dp))
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
-                    Button(
-                        onClick = { onConfirm(selectedMethod) },
-                        modifier = Modifier.weight(1f),
-                        colors = profileButtonColors()
-                    ) { Text("Confirmar pago") }
+                    Spacer(Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = { onConfirm(selectedMethod) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = profileButtonColors()
+                        ) {
+                            Text("Reintentar pago")
+                        }
+
+                        // Modificado: Ahora es solo el botón de Cancelar y se encarga de cerrar y limpiar
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Cancelar")
+                        }
+                    }
+                } else {
+                    // Estado Normal: Flujo estándar de selección de pasarela
+                    PaymentMethodOption(
+                        label = "💳 Tarjeta de crédito / débito",
+                        isSelected = selectedMethod == PaymentMethod.Card,
+                        onSelect = { selectedMethod = PaymentMethod.Card }
+                    )
+                    PaymentMethodOption(
+                        label = "🅿 PayPal",
+                        isSelected = selectedMethod == PaymentMethod.PayPal,
+                        onSelect = { selectedMethod = PaymentMethod.PayPal }
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                            Text("Cancelar")
+                        }
+                        Button(
+                            onClick = { onConfirm(selectedMethod) },
+                            modifier = Modifier.weight(1f),
+                            colors = profileButtonColors()
+                        ) { Text("Confirmar pago") }
+                    }
                 }
             }
         }

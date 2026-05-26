@@ -63,16 +63,37 @@ fun ProfileScreen(
     val saveSuccess by viewModel.saveSuccess.collectAsState()
     val scope = rememberCoroutineScope()
 
+    // Estados locales de la interfaz de usuario
     var nameField by remember { mutableStateOf("") }
-    val primaryColor = MaterialTheme.colorScheme.primary
+
+    // Estado local para rastrear qué color está seleccionado en la vista previa (por defecto Gris)
+    var selectedColorLong by remember { mutableStateOf(0xFF6A6A69L) }
+
+    // Transformamos el Long seleccionado en un objeto Color de Compose para alimentar la UI dinámicamente
+    val currentPreviewColor = remember(selectedColorLong) { Color(selectedColorLong) }
+
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
+
+    // Sincronizamos los estados locales cuando el perfil carga por primera vez desde el servidor
     LaunchedEffect(uiState) {
         if (uiState is ProfileUiState.Success) {
-            nameField = (uiState as ProfileUiState.Success).profile.name
+            val profile = (uiState as ProfileUiState.Success).profile
+            nameField = profile.name
+
+            // Si el perfil ya tiene un color guardado en la Base de Datos, inicializamos el estado local con él
+            profile.profileColor?.let { hex ->
+                runCatching {
+                    // Convertimos el String Hex de la BD (#RRGGBB) de vuelta a Long para Compose
+                    val colorLong = hex.removePrefix("#").toLong(16) or 0xFF000000L
+                    selectedColorLong = colorLong
+                }
+            }
         }
     }
+
+    // Show snackbar on save
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(saveSuccess) {
         saveSuccess?.let {
@@ -88,7 +109,7 @@ fun ProfileScreen(
         when (uiState) {
             is ProfileUiState.Loading -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = primaryColor)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             is ProfileUiState.NoProfile -> {
@@ -116,16 +137,16 @@ fun ProfileScreen(
                 }
             }
             is ProfileUiState.Success -> {
-                val profile = (uiState as ProfileUiState.Success).profile
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 32.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.spacedBy(28.dp)
                 ) {
+                    // CAMBIO AQUÍ: El título se queda estático con el color primario actual guardado, sin bailar con la paleta activa
                     Text(
                         "Mi Perfil",
                         fontSize = 28.sp,
@@ -133,8 +154,9 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
+                    // ── Name Section ──
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.width(300.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -145,17 +167,18 @@ fun ProfileScreen(
                             modifier = Modifier.padding(24.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text("Nombre del perfil", fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
-                                color = Color(0xFFE6E1E5))
+                            Text("Nombre del perfil", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFFE6E1E5))
+
                             OutlinedTextField(
                                 value = nameField,
                                 onValueChange = { nameField = it },
                                 label = { Text("Nombre") },
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .width(192.dp),
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = primaryColor,
-                                    focusedLabelColor = primaryColor,
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    focusedLabelColor = MaterialTheme.colorScheme.primary,
                                     focusedTextColor = Color(0xFFE6E1E5),
                                     unfocusedTextColor = Color(0xFFE6E1E5),
                                     unfocusedBorderColor = Color(0xFF444444),
@@ -165,6 +188,7 @@ fun ProfileScreen(
                         }
                     }
 
+                    // ── Color Palette Section ──
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -181,10 +205,11 @@ fun ProfileScreen(
                                 color = Color(0xFFE6E1E5))
                             Text(
                                 "El color que elijas teñirá toda la interfaz de la app",
-                                fontSize = 13.sp,
+                                fontSize = 18.sp,
                                 color = Color(0xFFE6E1E5)
                             )
 
+                            // Color grid (2 rows x 4 cols)
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 profileColorPalette.chunked(4).forEach { row ->
                                     Row(
@@ -194,8 +219,10 @@ fun ProfileScreen(
                                         row.forEach { option ->
                                             ColorSwatch(
                                                 option = option,
-                                                isSelected = primaryColor == option.color,
-                                                onClick = { viewModel.updateColor(option.hexLong) },
+                                                isSelected = selectedColorLong == option.hexLong,
+                                                onClick = {
+                                                    selectedColorLong = option.hexLong
+                                                },
                                                 modifier = Modifier.weight(1f)
                                             )
                                         }
@@ -203,6 +230,7 @@ fun ProfileScreen(
                                 }
                             }
 
+                            // Preview chip
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -212,13 +240,13 @@ fun ProfileScreen(
                                 Box(
                                     modifier = Modifier
                                         .height(28.dp)
-                                        .background(primaryColor, RoundedCornerShape(14.dp))
+                                        .background(currentPreviewColor, RoundedCornerShape(14.dp)) // Este sigue cambiando para mostrar la vista previa
                                         .padding(horizontal = 16.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         "Botón de ejemplo",
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        color = currentPreviewColor.contrastingTextColor(),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium
                                     )
@@ -227,8 +255,9 @@ fun ProfileScreen(
                         }
                     }
 
+                    // ── Save Button ──
                     Button(
-                        onClick = { viewModel.saveChanges(nameField) },
+                        onClick = { viewModel.saveChanges(nameField, selectedColorLong) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -278,7 +307,7 @@ fun ColorSwatch(
                 .background(option.color)
                 .border(
                     width = if (isSelected) 3.dp else 1.dp,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.4f),
+                    color = if (isSelected) Color.White else Color.Gray.copy(alpha = 0.4f),
                     shape = CircleShape
                 )
                 .clickable(onClick = onClick)
@@ -286,18 +315,16 @@ fun ColorSwatch(
             contentAlignment = Alignment.Center
         ) {
             if (isSelected) {
-                Text("✓", color = option.color.contrastingColor(), fontWeight = FontWeight.Bold)
+                Text("✓", color = option.color.contrastingTextColor(), fontWeight = FontWeight.Bold)
             }
         }
         Text(
             option.name,
-            fontSize = 10.sp,
+            fontSize = 14.sp,
             color = Color(0xFFCAC4D0)
         )
     }
 }
 
-private fun Color.contrastingColor(): Color {
-    val formulaLuminance = 0.2126f * this.red + 0.7152f * this.green + 0.0722f * this.blue
-    return if (formulaLuminance > 0.45f) Color.Black else Color.White
-}
+private fun Color.contrastingTextColor(): Color =
+    if (this.luminance() > 0.5f) Color.Black else Color.White

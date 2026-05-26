@@ -1,5 +1,6 @@
 package org.six.series.ui.components.screens
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,7 +36,6 @@ fun ProfileSelectorScreen(
 ) {
     val getProfilesUseCase = koinInject<GetMyProfilesUseCase>()
     val createProfileUseCase = koinInject<CreateProfileUseCase>()
-    val coroutineScope = rememberCoroutineScope()
 
     var profiles by remember { mutableStateOf<List<Profile>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -58,24 +58,13 @@ fun ProfileSelectorScreen(
     ) {
         when {
             isLoading -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+
             error != null -> Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Error: $error", color = MaterialTheme.colorScheme.error)
-                Button(
-                    onClick = {
-                        error = null
-                        isLoading = true
-                        coroutineScope.launch {
-                            getProfilesUseCase()
-                                .onSuccess { profiles = it }
-                                .onFailure { error = it.message }
-                            isLoading = false
-                        }
-                    },
-                    colors = profileButtonColors()
-                ) {
+                Button(onClick = { error = null; isLoading = true }, colors = profileButtonColors()) {
                     Text("Reintentar")
                 }
             }
@@ -145,17 +134,9 @@ fun ProfileSelectorScreen(
         CreateProfileDialog(
             onConfirm = { name ->
                 showCreateDialog = false
-                // Con la corutinia se puede capturar errores
-                coroutineScope.launch {
+                kotlinx.coroutines.MainScope().launch {
                     createProfileUseCase(name)
-                        .onSuccess {
-                            // Si se crea bien, refrescamos la lista
-                            getProfilesUseCase().onSuccess { profiles = it }
-                        }
-                        .onFailure { exception ->
-                            // Si falla, se asigna y se muestra
-                            error = exception.message
-                        }
+                    getProfilesUseCase().onSuccess { profiles = it }
                 }
             },
             onDismiss = { showCreateDialog = false }

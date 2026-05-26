@@ -5,16 +5,12 @@ import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import org.six.series.model.profile.IProfileRepository
 import org.six.series.model.profile.Profile
-import org.six.series.model.profile.ProfileCreateRequest
 import org.six.series.model.profile.ProfileUpdateRequest
 
 class RestProfileRepository(
@@ -38,7 +34,12 @@ class RestProfileRepository(
         return try {
             val profile = cliente.put("$url/$id/") {
                 contentType(ContentType.Application.Json)
-                setBody(request)
+                setBody(
+                    mapOf(
+                        "name" to request.name,
+                        "profile_color" to request.profileColor
+                    )
+                )
             }.body<Profile>()
             Result.success(profile)
         } catch (e: Exception) {
@@ -64,23 +65,13 @@ class RestProfileRepository(
             Result.failure(e)
         }
     }
-
     override suspend fun createProfile(name: String, color: String): Result<Profile> {
         return try {
-            val requestBody = ProfileCreateRequest(name = name, color = color)
-
-            val response: HttpResponse = cliente.post("$url/") {
+            val profile = cliente.post("$url/") {
                 contentType(ContentType.Application.Json)
-                setBody(requestBody)
-            }
-
-            if (response.status.isSuccess()) {
-                val profile = response.body<Profile>()
-                Result.success(profile)
-            } else {
-                val errorBody = response.bodyAsText()
-                Result.failure(Exception("(${response.status.value}): $errorBody"))
-            }
+                setBody(mapOf("name" to name, "color" to color))
+            }.body<Profile>()
+            Result.success(profile)
         } catch (e: Exception) {
             Result.failure(e)
         }

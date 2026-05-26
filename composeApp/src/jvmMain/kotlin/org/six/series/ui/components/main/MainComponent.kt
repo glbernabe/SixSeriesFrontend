@@ -90,7 +90,7 @@ fun MainComponent(rootNavController: NavController) {
                             viewModel.updateSearchQuery(updatedQuery)
                         },
                         onMovieClick = { selectedMovie ->
-                            // Handle navigation to the video player or detail screen here
+                            contentToPlay = selectedMovie
                         }
                     )
                 }
