@@ -1,4 +1,4 @@
-package org.six.series.model.subscription
+package org.six.series.model.subscripion
 
 interface ISubscriptionRepository {
     suspend fun getMySubscription(): Result<Subscription?>

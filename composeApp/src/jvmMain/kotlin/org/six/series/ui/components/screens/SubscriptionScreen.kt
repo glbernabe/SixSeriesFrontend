@@ -19,10 +19,10 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.six.series.model.payment.Payment
 import org.six.series.model.payment.PaymentMethod
 import org.six.series.model.payment.PaymentStatus
-import org.six.series.model.subscription.Subscription
-import org.six.series.model.subscription.SubscriptionStatus
-import org.six.series.model.subscription.SubscriptionType
-import org.six.series.model.subscription.subscriptionPlans
+import org.six.series.model.subscripion.Subscription
+import org.six.series.model.subscripion.SubscriptionStatus
+import org.six.series.model.subscripion.SubscriptionType
+import org.six.series.model.subscripion.subscriptionPlans
 import org.six.series.profileButtonColors
 import org.six.series.ui.components.viewmodels.SubscriptionUiState
 import org.six.series.ui.components.viewmodels.SubscriptionViewModel
@@ -30,7 +30,7 @@ import org.six.series.ui.components.viewmodels.SubscriptionViewModel
 @Composable
 fun SubscriptionScreen(
     viewModel: SubscriptionViewModel = koinViewModel(),
-    onBack: (() -> Unit)? = null   // null cuando se usa desde el TopBar de Main
+    onBack: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val showPaymentDialog by viewModel.showPaymentDialog.collectAsState()

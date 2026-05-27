@@ -14,8 +14,8 @@ import org.six.series.application.usecases.subscription.GetMySubscriptionUseCase
 import org.six.series.model.payment.Payment
 import org.six.series.model.payment.PaymentMethod
 import org.six.series.model.payment.PaymentRequest
-import org.six.series.model.subscription.Subscription
-import org.six.series.model.subscription.SubscriptionType
+import org.six.series.model.subscripion.Subscription
+import org.six.series.model.subscripion.SubscriptionType
 
 sealed class SubscriptionUiState {
     object Loading : SubscriptionUiState()
@@ -54,18 +54,18 @@ class SubscriptionViewModel(
             _uiState.value = SubscriptionUiState.Loading
             val subResult = getMySubscriptionUseCase()
             val payResult = getMyPaymentsUseCase()
-            if (subResult.isSuccess && payResult.isSuccess) {
-                _uiState.value = SubscriptionUiState.Success(
-                    subscription = subResult.getOrNull(),
-                    payments = payResult.getOrNull() ?: emptyList()
-                )
-            } else {
-                _uiState.value = SubscriptionUiState.Error("Error al cargar los datos")
-            }
+
+            val sub = subResult.getOrNull()
+            val pays = payResult.getOrNull() ?: emptyList()
+
+            _uiState.value = SubscriptionUiState.Success(
+                subscription = sub,
+                payments = pays
+            )
         }
     }
 
-    // Muestra el selector de plan aunque haya sub activa (para cambiar de plan)
+    // Muestra el selector de plan aunque haya sub activa
     fun requestChangePlan() {
         val current = _uiState.value as? SubscriptionUiState.Success ?: return
         _uiState.value = current.copy(showingPlanSelector = true)

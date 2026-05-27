@@ -1,8 +1,8 @@
 package org.six.series.application.usecases.subscription
 
-import org.six.series.model.subscription.ISubscriptionRepository
-import org.six.series.model.subscription.Subscription
-import org.six.series.model.subscription.SubscriptionType
+import org.six.series.model.subscripion.ISubscriptionRepository
+import org.six.series.model.subscripion.Subscription
+import org.six.series.model.subscripion.SubscriptionType
 
 class GetMySubscriptionUseCase(private val repo: ISubscriptionRepository) {
     suspend operator fun invoke(): Result<Subscription?> = repo.getMySubscription()

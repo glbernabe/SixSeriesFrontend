@@ -30,7 +30,7 @@ import kotlinx.serialization.json.Json
 import org.six.series.infrastructure.TokenStorage
 
 fun createHttpClient(tokenStorage: TokenStorage, refreshUrl: String): HttpClient {
-    return HttpClient(CIO) { // Puedes usar HttpClient(CIO), HttpClient(Darwin), etc.
+    return HttpClient(CIO) {
 
         // Header
         install(DefaultRequest) {

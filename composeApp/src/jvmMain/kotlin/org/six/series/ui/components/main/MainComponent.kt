@@ -1,5 +1,11 @@
 package org.six.series.ui.components.main
-
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import org.koin.compose.viewmodel.koinViewModel
+import org.six.series.model.content.ContentType
+import org.six.series.ui.components.screens.DetailScreen
+import org.six.series.ui.components.viewmodels.DetailViewModel
+import org.six.series.ui.components.viewmodels.MainUiState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +40,7 @@ fun MainComponent(rootNavController: NavController) {
     val internalNavController = rememberNavController()
     val context = LocalPlatformContext.current
     val imageLoader = SingletonImageLoader.get(context)
-
+    var selectedContent by remember { mutableStateOf<Content?>(null) }
     val viewModel = remember {
         MainPageViewModel(
             context = context,
@@ -68,7 +74,10 @@ fun MainComponent(rootNavController: NavController) {
                 composable(MainRoutes.Principal) {
                     HeroScreen(
                         state = viewModel.uiState,
-                        onPlayContent = { content -> contentToPlay = content }
+                        onPlayContent = { content ->
+                            selectedContent = content
+                            internalNavController.navigate(MainRoutes.Detail)
+                        }
                     )
                 }
 
@@ -94,6 +103,27 @@ fun MainComponent(rootNavController: NavController) {
 
                 composable(MainRoutes.Subscription) {
                     SubscriptionScreen()
+                }
+
+                composable(MainRoutes.Detail) {
+                    val content = selectedContent ?: return@composable
+                    val detailViewModel: DetailViewModel = koinViewModel()
+
+                    DetailScreen(
+                        content = content,
+                        viewModel = detailViewModel,
+                        onPlayEpisode = { ep ->
+                            contentToPlay = Content(
+                                id = null,
+                                title = ep.title,
+                                description = ep.description ?: "",
+                                ageRating = content.ageRating,
+                                videoURL = ep.videoUrl,
+                                type = ContentType.Series
+                            )
+                        },
+                        onPlayMovie = { contentToPlay = it }
+                    )
                 }
             }
         }

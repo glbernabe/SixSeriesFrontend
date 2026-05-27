@@ -32,7 +32,8 @@ import org.six.series.profileButtonColors
 @Composable
 fun ProfileSelectorScreen(
     onProfileSelected: (Profile) -> Unit,
-    onManageSubscription: () -> Unit
+    onManageSubscription: () -> Unit,
+    onGoToLogin: () -> Unit
 ) {
     val getProfilesUseCase = koinInject<GetMyProfilesUseCase>()
     val createProfileUseCase = koinInject<CreateProfileUseCase>()
@@ -76,7 +77,7 @@ fun ProfileSelectorScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(40.dp)
             ) {
-                // ── Header ────────────────────────────────────────────────
+                // ──────────────────────── Header ────────────────────────
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -94,6 +95,16 @@ fun ProfileSelectorScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFFE6E1E5)
                     )
+                    TextButton(
+                        onClick = onGoToLogin,
+                        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                    ) {
+                        Text(
+                            "← Cerrar sesión",
+                            color = Color(0xFF888888),
+                            fontSize = 14.sp
+                        )
+                    }
                 }
 
                 // ──────────────────────── Profile grid ────────────────────────

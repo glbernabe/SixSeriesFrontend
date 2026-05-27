@@ -6,9 +6,9 @@ import io.ktor.client.request.*
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import org.six.series.model.subscription.ISubscriptionRepository
-import org.six.series.model.subscription.Subscription
-import org.six.series.model.subscription.SubscriptionType
+import org.six.series.model.subscripion.ISubscriptionRepository
+import org.six.series.model.subscripion.Subscription
+import org.six.series.model.subscripion.SubscriptionType
 
 class RestSubscriptionRepository(
     private val url: String,
@@ -20,7 +20,7 @@ class RestSubscriptionRepository(
         return try {
             val sub = cliente.get("$url/me/") {
                 contentType(ContentType.Application.Json)
-            }.body<Subscription>()  // era body<List<Subscription>>()
+            }.body<Subscription>()  
             Result.success(sub)
         } catch (e: Exception) {
             Result.failure(e)
