@@ -42,6 +42,8 @@ fun ProfileSelectorScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var showCreateDialog by remember { mutableStateOf(false) }
 
+    val totalItems = if (profiles.size < 5) profiles.size + 1 else profiles.size
+
     LaunchedEffect(Unit) {
         isLoading = true
         getProfilesUseCase()
@@ -79,29 +81,34 @@ fun ProfileSelectorScreen(
                 // ── Header ────────────────────────────────────────────────
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 90.dp)
                 ) {
                     Text(
                         "SIX SERIES",
-                        fontSize = 32.sp,
+                        fontSize = 40.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 6.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         "¿Quién está viendo?",
-                        fontSize = 22.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFFE6E1E5)
                     )
                 }
 
+                Spacer(Modifier.height(100.dp))
+
                 // ──────────────────────── Profile grid ────────────────────────
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 140.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp),
-                    modifier = Modifier.weight(1f, fill = false)
+                    columns = GridCells.Fixed(count = maxOf(1, totalItems)),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalArrangement = Arrangement.spacedBy(30.dp),
+                    modifier = Modifier
+                        .width(1000.dp)
+                        .height(190.dp)
                 ) {
                     items(profiles) { profile ->
                         ProfileCard(
@@ -109,8 +116,11 @@ fun ProfileSelectorScreen(
                             onClick = { onProfileSelected(profile) }
                         )
                     }
-                    item {
-                        AddProfileCard(onClick = { showCreateDialog = true })
+                    if (profiles.size < 5) {
+                        item {
+                            AddProfileCard(onClick = { showCreateDialog = true })
+                        }
+
                     }
                 }
 

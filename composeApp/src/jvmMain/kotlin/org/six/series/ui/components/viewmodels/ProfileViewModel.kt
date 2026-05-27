@@ -27,7 +27,8 @@ class ProfileViewModel(
     private val appViewModel: AppViewModel
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Error(""))
+    // Cambiado el estado inicial a Loading para evitar parpadeos con datos residuales anteriores
+    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     private val _saveSuccess = MutableStateFlow<String?>(null)
@@ -92,6 +93,12 @@ class ProfileViewModel(
                 .onSuccess { loadProfile() }
                 .onFailure { _uiState.value = ProfileUiState.Error("Error al crear el perfil") }
         }
+    }
+
+    // ── Cleans all the profiles if the user logout ──
+    fun clearState() {
+        _uiState.value = ProfileUiState.Loading
+        _saveSuccess.value = null
     }
 
     fun dismissSaveMessage() { _saveSuccess.value = null }

@@ -57,47 +57,101 @@ fun createHttpClient(tokenStorage: TokenStorage, refreshUrl: String): HttpClient
         }
 
         // Auth
-        install(Auth) {
-            bearer {
-                sendWithoutRequest { true }
+//        install(Auth) {
+//            bearer {
+//
+//                sendWithoutRequest { request ->
+//
+//                    // No enviar token si ya no existe en storage
+//                    val currentToken = tokenStorage.getAccessToken()
+//
+//                    if (currentToken.isNullOrBlank()) {
+//                        false
+//                    } else {
+//
+//                        // Comprobar si el token del request coincide
+//                        val authHeader = request.headers[HttpHeaders.Authorization]
+//
+//                        authHeader == null ||
+//                                authHeader == "Bearer $currentToken"
+//                    }
+//                }
+//
+//                loadTokens {
+//                    val access = tokenStorage.getAccessToken()
+//                    val refresh = tokenStorage.getRefreshToken()
+//
+//                    if (
+//                        !access.isNullOrBlank() &&
+//                        !refresh.isNullOrBlank()
+//                    ) {
+//                        BearerTokens(access, refresh)
+//                    } else {
+//                        null
+//                    }
+//                }
+//
+//                refreshTokens {
+//
+//                    val refreshToken =
+//                        tokenStorage.getRefreshToken()
+//                            ?: return@refreshTokens null
+//
+//                    try {
+//
+//                        val response = client.post(refreshUrl) {
+//
+//                            markAsRefreshTokenRequest()
+//
+//                            contentType(ContentType.Application.Json)
+//
+//                            setBody(
+//                                mapOf(
+//                                    "refresh_token" to refreshToken
+//                                )
+//                            )
+//                        }
+//
+//                        if (response.status == HttpStatusCode.OK) {
+//
+//                            val data = response.body<Map<String, String>>()
+//
+//                            val newAccess =
+//                                data["access_token"] ?: return@refreshTokens null
+//
+//                            val newRefresh =
+//                                data["refresh_token"] ?: refreshToken
+//
+//                            tokenStorage.saveTokens(
+//                                newAccess,
+//                                newRefresh
+//                            )
+//
+//                            BearerTokens(
+//                                newAccess,
+//                                newRefresh
+//                            )
+//
+//                        } else {
+//
+//                            tokenStorage.clear()
+//                            null
+//                        }
+//
+//                    } catch (e: Exception) {
+//
+//                        tokenStorage.clear()
+//                        null
+//                    }
+//                }
+//            }
+//        }
 
-                // Cargar tokens desde TokenStorage
-                loadTokens {
-                    val access = tokenStorage.getAccessToken()
-                    val refresh = tokenStorage.getRefreshToken()
-                    if (!access.isNullOrEmpty() && !refresh.isNullOrEmpty()) {
-                        BearerTokens(access, refresh)
-                    } else null
-                }
+        install(DefaultRequest) {
+            val token = tokenStorage.getAccessToken()
 
-                // Refrescar tokens automáticamente ante 401
-                refreshTokens {
-                    val refreshToken = tokenStorage.getRefreshToken() ?: return@refreshTokens null
-
-                    try {
-                        val response = client.post(refreshUrl) {
-                            markAsRefreshTokenRequest()
-                            contentType(ContentType.Application.Json)
-                            setBody(mapOf("refresh_token" to refreshToken))
-                        }
-
-                        if (response.status == HttpStatusCode.OK) {
-                            val data = response.body<Map<String, String>>()
-                            val newAccess = data["access_token"] ?: ""
-                            val newRefresh = data["refresh_token"] ?: refreshToken
-
-                            tokenStorage.saveTokens(newAccess, newRefresh)
-
-                            BearerTokens(newAccess, newRefresh)
-                        } else {
-                            tokenStorage.clear()
-                            null
-                        }
-                    } catch (e: Exception) {
-                        tokenStorage.clear()
-                        null
-                    }
-                }
+            if (!token.isNullOrBlank()) {
+                header(HttpHeaders.Authorization, "Bearer $token")
             }
         }
 

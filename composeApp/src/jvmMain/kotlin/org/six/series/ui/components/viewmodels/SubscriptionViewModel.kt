@@ -36,9 +36,8 @@ class SubscriptionViewModel(
     private val makePaymentUseCase: MakePaymentUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<SubscriptionUiState>(
-        SubscriptionUiState.Success(null, emptyList())
-    )
+    // Cambiado el estado inicial por defecto a Loading para evitar parpadeos con datos de la sesión anterior
+    private val _uiState = MutableStateFlow<SubscriptionUiState>(SubscriptionUiState.Loading)
     val uiState: StateFlow<SubscriptionUiState> = _uiState.asStateFlow()
 
     private val _actionMessage = MutableStateFlow<String?>(null)
@@ -102,7 +101,7 @@ class SubscriptionViewModel(
                     makePaymentUseCase(PaymentRequest(sub.id, method, amount))
                         .onSuccess {
                             _actionMessage.value = "¡Suscripción activada correctamente!"
-                            _showPaymentDialog.value = false // Solo cerramos el diálogo si el pago es exitoso
+                            _showPaymentDialog.value = false
                             _pendingType.value = null
                             load()
                         }
@@ -128,11 +127,11 @@ class SubscriptionViewModel(
             cancelSubscriptionUseCase(currentSub.id)
                 .onSuccess {
                     _actionMessage.value = "Suscripción pendiente cancelada con éxito."
-                    load() // Refresca la lista de planes en segundo plano
+                    load()
                 }
                 .onFailure { exception ->
                     _actionMessage.value = exception.message ?: "Error al descartar la suscripción pendiente."
-                    load() // Recargamos toda la UI
+                    load()
                 }
         }
     }
@@ -150,6 +149,15 @@ class SubscriptionViewModel(
                     _actionMessage.value = "Error al cancelar la suscripción"
                 }
         }
+    }
+
+    // ── Cleans the subscription information for the case someone logins ──
+    fun clearState() {
+        _uiState.value = SubscriptionUiState.Loading
+        _actionMessage.value = null
+        _showPaymentDialog.value = false
+        _pendingType.value = null
+        _paymentError.value = null
     }
 
     fun dismissMessage() { _actionMessage.value = null }

@@ -46,6 +46,8 @@ import org.six.series.infrastructure.TokenStorage
 import org.six.series.infrastructure.UserTokenData
 import org.six.series.model.NavigationItem
 import org.six.series.ui.components.main.MainRoutes
+import org.six.series.ui.components.viewmodels.ProfileViewModel
+import org.six.series.ui.components.viewmodels.SubscriptionViewModel
 import sixseries.composeapp.generated.resources.Res
 import sixseries.composeapp.generated.resources.ic_Grid
 import sixseries.composeapp.generated.resources.ic_magnifying_Glass
@@ -69,9 +71,12 @@ fun AdaptiveTopBar(
     rootNavController: NavController
 ) {
     val tokenStorage = koinInject<TokenStorage>()
-    val hasSession = remember { tokenStorage.getAccessToken() != null }
     val logoutUseCase = koinInject<LogOutUseCase>()
-    // Single Source of Truth for session data injection
+
+    // Inyección de los ViewModels Singletons de Koin para purgar sus cachés al cerrar sesión
+    val profileViewModel = koinInject<ProfileViewModel>()
+    val subscriptionViewModel = koinInject<SubscriptionViewModel>()
+
     val scope = rememberCoroutineScope()
     val contentColor = MaterialTheme.colorScheme.onPrimary
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -144,7 +149,6 @@ fun AdaptiveTopBar(
                         ) {
                             if (item.icon == Res.drawable.ic_user_Circle_Single) {
                                 showUserMenu = !showUserMenu
-
                             } else {
                                 try {
                                     navController.navigate(item.route) {
@@ -196,14 +200,12 @@ fun AdaptiveTopBar(
                     }
 
                     if (item.icon == Res.drawable.ic_user_Circle_Single && showUserMenu) {
-                        // Fetch the pre-parsed payload tokens lazily on menu display
                         val userData = remember(showUserMenu) { tokenStorage.getUserData() }
 
                         DropdownMenu(
                             expanded = showUserMenu,
                             onDismissRequest = { showUserMenu = false },
                             offset = DpOffset(0.dp, 8.dp),
-                            // Modifiers moved here to keep container rendering sharp and clean
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(8.dp),
                             tonalElevation = 0.dp,
@@ -215,14 +217,14 @@ fun AdaptiveTopBar(
                                 backgroundColor = Color.Transparent,
                                 elevation = 0.dp,
                                 onChangeProfileClick = {
+                                    showUserMenu = false
                                     rootNavController.navigate(AppRoute.ProfileSelector) {
                                         popUpTo(AppRoute.Main) { inclusive = true }
                                     }
                                 },
                                 onAccountSettingsClick = {
                                     showUserMenu = false
-                                    navController.navigate(MainRoutes.Profile) {popUpTo(0)}
-
+                                    navController.navigate(MainRoutes.Profile) { popUpTo(0) }
                                 },
                                 onSignOutClick = {
                                     showUserMenu = false
@@ -230,8 +232,14 @@ fun AdaptiveTopBar(
                                         logoutUseCase.logout()
                                             .onSuccess {
                                                 errorMessage = "Sesión cerrada correctamente"
+
+                                                // Forzamos el vaciado de los Singletons de memoria de Koin
+                                                profileViewModel.clearState()
+                                                subscriptionViewModel.clearState()
+
+                                                // Destruimos completamente el Backstack de las pantallas del usuario
                                                 rootNavController.navigate(AppRoute.Login) {
-                                                    popUpTo(0)
+                                                    popUpTo(0) { inclusive = true }
                                                 }
                                             }
                                             .onFailure {
@@ -281,7 +289,7 @@ fun DisplayPanelOptions(
     ) {
         Row(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.98f)),
+                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.98f)),
         ) {
             // Left Column: Streaming Options Navigation
             Column(
