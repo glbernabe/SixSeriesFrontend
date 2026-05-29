@@ -34,6 +34,9 @@ class ProfileViewModel(
     private val _saveSuccess = MutableStateFlow<String?>(null)
     val saveSuccess: StateFlow<String?> = _saveSuccess.asStateFlow()
 
+    private val _showSubscriptionAlert = MutableStateFlow(false)
+    val showSubscriptionAlert: StateFlow<Boolean> = _showSubscriptionAlert.asStateFlow()
+
     // load first profile from the list
     fun loadProfile() {
         viewModelScope.launch {
@@ -91,14 +94,29 @@ class ProfileViewModel(
             _uiState.value = ProfileUiState.Loading
             createProfileUseCase(name)
                 .onSuccess { loadProfile() }
-                .onFailure { _uiState.value = ProfileUiState.Error("Error al crear el perfil") }
+                .onFailure { exception ->
+                    _uiState.value = ProfileUiState.NoProfile
+
+                    val errorMessage = exception.message ?: ""
+                    // Check if the backend response contains the subscription error keywords
+                    if (errorMessage.contains("subscription", ignoreCase = true) || errorMessage.contains("subscripción", ignoreCase = true)) {
+                        _showSubscriptionAlert.value = true
+                    } else {
+                        _uiState.value = ProfileUiState.Error("Error al crear el perfil")
+                    }
+                }
         }
+    }
+
+    fun dismissSubscriptionAlert() {
+        _showSubscriptionAlert.value = false
     }
 
     // ── Cleans all the profiles if the user logout ──
     fun clearState() {
         _uiState.value = ProfileUiState.Loading
         _saveSuccess.value = null
+        _showSubscriptionAlert.value = false
     }
 
     fun dismissSaveMessage() { _saveSuccess.value = null }

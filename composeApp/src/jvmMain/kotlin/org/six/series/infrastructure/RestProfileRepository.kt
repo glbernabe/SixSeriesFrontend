@@ -5,10 +5,12 @@ import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import org.six.series.model.profile.IProfileRepository
 import org.six.series.model.profile.Profile
 import org.six.series.model.profile.ProfileUpdateRequest
@@ -65,13 +67,21 @@ class RestProfileRepository(
             Result.failure(e)
         }
     }
+
     override suspend fun createProfile(name: String, color: String): Result<Profile> {
         return try {
-            val profile = cliente.post("$url/") {
+            val response = cliente.post("$url/") {
                 contentType(ContentType.Application.Json)
                 setBody(mapOf("name" to name, "color" to color))
-            }.body<Profile>()
-            Result.success(profile)
+            }
+
+            // Inspect the response status before deserializing
+            if (response.status.isSuccess()) {
+                Result.success(response.body<Profile>())
+            } else {
+                val errorBody = response.bodyAsText()
+                Result.failure(Exception(errorBody))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

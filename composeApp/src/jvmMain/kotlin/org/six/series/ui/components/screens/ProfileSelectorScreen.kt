@@ -37,19 +37,28 @@ fun ProfileSelectorScreen(
     val getProfilesUseCase = koinInject<GetMyProfilesUseCase>()
     val createProfileUseCase = koinInject<CreateProfileUseCase>()
 
+    val coroutineScope = rememberCoroutineScope()
+
     var profiles by remember { mutableStateOf<List<Profile>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var showCreateDialog by remember { mutableStateOf(false) }
+    var showSubscriptionAlert by remember { mutableStateOf(false) }
 
     val totalItems = if (profiles.size < 5) profiles.size + 1 else profiles.size
 
-    LaunchedEffect(Unit) {
+    fun loadProfiles() {
         isLoading = true
-        getProfilesUseCase()
-            .onSuccess { profiles = it }
-            .onFailure { error = it.message }
-        isLoading = false
+        coroutineScope.launch {
+            getProfilesUseCase()
+                .onSuccess { profiles = it }
+                .onFailure { error = it.message }
+            isLoading = false
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        loadProfiles()
     }
 
     Box(
@@ -66,7 +75,7 @@ fun ProfileSelectorScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Error: $error", color = MaterialTheme.colorScheme.error)
-                Button(onClick = { error = null; isLoading = true }, colors = profileButtonColors()) {
+                Button(onClick = { error = null; loadProfiles() }, colors = profileButtonColors()) {
                     Text("Reintentar")
                 }
             }
@@ -120,7 +129,6 @@ fun ProfileSelectorScreen(
                         item {
                             AddProfileCard(onClick = { showCreateDialog = true })
                         }
-
                     }
                 }
 
@@ -144,12 +152,46 @@ fun ProfileSelectorScreen(
         CreateProfileDialog(
             onConfirm = { name ->
                 showCreateDialog = false
-                kotlinx.coroutines.MainScope().launch {
+                isLoading = true
+                coroutineScope.launch {
                     createProfileUseCase(name)
-                    getProfilesUseCase().onSuccess { profiles = it }
+                        .onSuccess {
+                            getProfilesUseCase().onSuccess { profiles = it }
+                            isLoading = false
+                        }
+                        .onFailure { exception ->
+                            isLoading = false
+                            // Check if the error is related to subscription limits
+                            if (exception.message?.contains("subscription", ignoreCase = true) == true) {
+                                showSubscriptionAlert = true
+                            } else {
+                                error = exception.message ?: "Unknown error"
+                            }
+                        }
                 }
             },
             onDismiss = { showCreateDialog = false }
+        )
+    }
+
+    if (showSubscriptionAlert) {
+        AlertDialog(
+            onDismissRequest = { showSubscriptionAlert = false },
+            containerColor = Color(0xFF1A1A1A),
+            title = { Text("Suscripción requerida", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
+            text = { Text("Debes de suscribirte a uno de nuestros planes para poder crear un perfil.", color = Color(0xFFE6E1E5)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSubscriptionAlert = false
+                        onManageSubscription()
+                    },
+                    colors = profileButtonColors()
+                ) { Text("Ver planes") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSubscriptionAlert = false }) { Text("Cancelar", color = Color(0xFF888888)) }
+            }
         )
     }
 }
