@@ -23,10 +23,16 @@ class RestProfileRepository(
 
     override suspend fun getMyProfiles(): Result<List<Profile>> {
         return try {
-            val profiles = cliente.get("$url/") {
+            val response = cliente.get("$url/") {
                 contentType(ContentType.Application.Json)
-            }.body<List<Profile>>()
-            Result.success(profiles)
+            }
+            // Inspect the response status before deserializing
+            if (response.status.isSuccess()) {
+                Result.success(response.body<List<Profile>>())
+            } else {
+                val errorBody = response.bodyAsText()
+                Result.failure(Exception(errorBody))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -75,7 +81,6 @@ class RestProfileRepository(
                 setBody(mapOf("name" to name, "color" to color))
             }
 
-            // Inspect the response status before deserializing
             if (response.status.isSuccess()) {
                 Result.success(response.body<Profile>())
             } else {

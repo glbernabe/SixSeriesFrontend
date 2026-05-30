@@ -27,7 +27,6 @@ class ProfileViewModel(
     private val appViewModel: AppViewModel
 ) : ViewModel() {
 
-    // Cambiado el estado inicial a Loading para evitar parpadeos con datos residuales anteriores
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
@@ -56,8 +55,15 @@ class ProfileViewModel(
                         _uiState.value = ProfileUiState.NoProfile
                     }
                 }
-                .onFailure {
-                    _uiState.value = ProfileUiState.Error("Error al cargar el perfil")
+                .onFailure { exception ->
+                    val errorMessage = exception.message ?: ""
+                    // Check if the validation error matches subscription parameters
+                    if (errorMessage.contains("subscription", ignoreCase = true) || errorMessage.contains("subscripción", ignoreCase = true)) {
+                        _uiState.value = ProfileUiState.NoProfile
+                        _showSubscriptionAlert.value = true
+                    } else {
+                        _uiState.value = ProfileUiState.Error("Error al cargar el perfil")
+                    }
                 }
         }
     }
@@ -98,7 +104,6 @@ class ProfileViewModel(
                     _uiState.value = ProfileUiState.NoProfile
 
                     val errorMessage = exception.message ?: ""
-                    // Check if the backend response contains the subscription error keywords
                     if (errorMessage.contains("subscription", ignoreCase = true) || errorMessage.contains("subscripción", ignoreCase = true)) {
                         _showSubscriptionAlert.value = true
                     } else {

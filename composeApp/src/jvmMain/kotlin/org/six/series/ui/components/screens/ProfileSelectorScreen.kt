@@ -22,43 +22,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.six.series.application.usecases.profile.CreateProfileUseCase
 import org.six.series.application.usecases.profile.GetMyProfilesUseCase
 import org.six.series.model.profile.Profile
 import org.six.series.profileButtonColors
+import org.six.series.ui.components.viewmodels.ProfileUiState
+import org.six.series.ui.components.viewmodels.ProfileViewModel
 
 @Composable
 fun ProfileSelectorScreen(
+    viewModel: ProfileViewModel,
     onProfileSelected: (Profile) -> Unit,
     onManageSubscription: () -> Unit
 ) {
-    val getProfilesUseCase = koinInject<GetMyProfilesUseCase>()
-    val createProfileUseCase = koinInject<CreateProfileUseCase>()
-
-    val coroutineScope = rememberCoroutineScope()
-
-    var profiles by remember { mutableStateOf<List<Profile>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val showSubscriptionAlert by viewModel.showSubscriptionAlert.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
-    var showSubscriptionAlert by remember { mutableStateOf(false) }
-
-    val totalItems = if (profiles.size < 5) profiles.size + 1 else profiles.size
-
-    fun loadProfiles() {
-        isLoading = true
-        coroutineScope.launch {
-            getProfilesUseCase()
-                .onSuccess { profiles = it }
-                .onFailure { error = it.message }
-            isLoading = false
-        }
-    }
 
     LaunchedEffect(Unit) {
-        loadProfiles()
+        viewModel.loadProfile()
     }
 
     Box(
@@ -67,82 +52,91 @@ fun ProfileSelectorScreen(
             .background(Color(0xFF0D0D0D)),
         contentAlignment = Alignment.Center
     ) {
-        when {
-            isLoading -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        when (val state = uiState) {
+            is ProfileUiState.Loading -> {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
 
-            error != null -> Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text("Error: $error", color = MaterialTheme.colorScheme.error)
-                Button(onClick = { error = null; loadProfiles() }, colors = profileButtonColors()) {
-                    Text("Reintentar")
+            is ProfileUiState.Error -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                    Button(onClick = { viewModel.loadProfile() }, colors = profileButtonColors()) {
+                        Text("Reintentar")
+                    }
                 }
             }
 
-            else -> Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 48.dp, vertical = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(40.dp)
-            ) {
-                // ── Header ────────────────────────────────────────────────
+            else -> {
+                val profiles = if (state is ProfileUiState.Success) listOf(state.profile) else emptyList()
+                val totalItems = if (profiles.size < 5) profiles.size + 1 else profiles.size
+
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(top = 90.dp)
-                ) {
-                    Text(
-                        "SIX SERIES",
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 6.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        "¿Quién está viendo?",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFE6E1E5)
-                    )
-                }
-
-                Spacer(Modifier.height(100.dp))
-
-                // ──────────────────────── Profile grid ────────────────────────
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(count = maxOf(1, totalItems)),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalArrangement = Arrangement.spacedBy(30.dp),
                     modifier = Modifier
-                        .width(1000.dp)
-                        .height(190.dp)
+                        .fillMaxSize()
+                        .padding(horizontal = 48.dp, vertical = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(40.dp)
                 ) {
-                    items(profiles) { profile ->
-                        ProfileCard(
-                            profile = profile,
-                            onClick = { onProfileSelected(profile) }
+                    // ── Header ────────────────────────────────────────────────
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 90.dp)
+                    ) {
+                        Text(
+                            "SIX SERIES",
+                            fontSize = 40.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 6.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "¿Quién está viendo?",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFE6E1E5)
                         )
                     }
-                    if (profiles.size < 5) {
-                        item {
-                            AddProfileCard(onClick = { showCreateDialog = true })
+
+                    Spacer(Modifier.height(100.dp))
+
+                    // ──────────────────────── Profile grid ────────────────────────
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(count = maxOf(1, totalItems)),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalArrangement = Arrangement.spacedBy(30.dp),
+                        modifier = Modifier
+                            .width(1000.dp)
+                            .height(190.dp)
+                    ) {
+                        items(profiles) { profile ->
+                            ProfileCard(
+                                profile = profile,
+                                onClick = { onProfileSelected(profile) }
+                            )
+                        }
+                        if (profiles.size < 5) {
+                            item {
+                                AddProfileCard(onClick = { showCreateDialog = true })
+                            }
                         }
                     }
-                }
 
-                // ──────────────────────── Subscription link ────────────────────────
-                TextButton(
-                    onClick = onManageSubscription,
-                    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
-                ) {
-                    Text(
-                        "Gestionar suscripción →",
-                        color = Color(0xFF888888),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    // ──────────────────────── Subscription link ────────────────────────
+                    TextButton(
+                        onClick = onManageSubscription,
+                        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                    ) {
+                        Text(
+                            "Gestionar suscripción →",
+                            color = Color(0xFF888888),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -152,23 +146,7 @@ fun ProfileSelectorScreen(
         CreateProfileDialog(
             onConfirm = { name ->
                 showCreateDialog = false
-                isLoading = true
-                coroutineScope.launch {
-                    createProfileUseCase(name)
-                        .onSuccess {
-                            getProfilesUseCase().onSuccess { profiles = it }
-                            isLoading = false
-                        }
-                        .onFailure { exception ->
-                            isLoading = false
-                            // Check if the error is related to subscription limits
-                            if (exception.message?.contains("subscription", ignoreCase = true) == true) {
-                                showSubscriptionAlert = true
-                            } else {
-                                error = exception.message ?: "Unknown error"
-                            }
-                        }
-                }
+                viewModel.createProfile(name)
             },
             onDismiss = { showCreateDialog = false }
         )
@@ -176,21 +154,21 @@ fun ProfileSelectorScreen(
 
     if (showSubscriptionAlert) {
         AlertDialog(
-            onDismissRequest = { showSubscriptionAlert = false },
+            onDismissRequest = { viewModel.dismissSubscriptionAlert() },
             containerColor = Color(0xFF1A1A1A),
             title = { Text("Suscripción requerida", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
-            text = { Text("Debes de suscribirte a uno de nuestros planes para poder crear un perfil.", color = Color(0xFFE6E1E5)) },
+            text = { Text("Debes de suscribirte a uno de nuestros planes para poder acceder y ver el contenido.", color = Color(0xFFE6E1E5)) },
             confirmButton = {
                 Button(
                     onClick = {
-                        showSubscriptionAlert = false
+                        viewModel.dismissSubscriptionAlert()
                         onManageSubscription()
                     },
                     colors = profileButtonColors()
                 ) { Text("Ver planes") }
             },
             dismissButton = {
-                TextButton(onClick = { showSubscriptionAlert = false }) { Text("Cancelar", color = Color(0xFF888888)) }
+                TextButton(onClick = { viewModel.dismissSubscriptionAlert() }) { Text("Cancelar", color = Color(0xFF888888)) }
             }
         )
     }

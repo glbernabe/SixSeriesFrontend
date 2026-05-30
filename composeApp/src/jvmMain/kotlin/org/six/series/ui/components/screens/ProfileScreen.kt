@@ -80,6 +80,7 @@ fun ProfileScreen(
     LaunchedEffect(uiState) {
         if (uiState is ProfileUiState.Success) {
             val profile = (uiState as ProfileUiState.Success).profile
+
             nameField = profile.name
 
             // Si el perfil ya tiene un color guardado en la Base de Datos, inicializamos el estado local con él

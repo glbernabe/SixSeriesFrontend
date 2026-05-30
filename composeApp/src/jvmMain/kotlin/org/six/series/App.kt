@@ -20,10 +20,12 @@ import org.six.series.ui.components.screens.MainScreen
 import org.six.series.ui.components.screens.ProfileSelectorScreen
 import org.six.series.ui.components.screens.RegisterScreen
 import org.six.series.ui.components.screens.SubscriptionScreen
+import org.six.series.ui.components.viewmodels.ProfileViewModel
 
 @Composable
 fun App() {
     val appViewModel: AppViewModel = koinViewModel()
+    val profileViewModel: ProfileViewModel = koinViewModel()
     val navController = rememberNavController()
     val startDestination by appViewModel.startDestination.collectAsState()
     val appColorLong by appViewModel.appColor.collectAsState()
@@ -65,6 +67,7 @@ fun App() {
 
                 composable(AppRoute.ProfileSelector) {
                     ProfileSelectorScreen(
+                        viewModel = profileViewModel,
                         onProfileSelected = { profile ->
                             profile.profileColor?.let { hex ->
                                 try {
@@ -77,7 +80,6 @@ fun App() {
                             }
                         },
                         onManageSubscription = {
-                            // Pantalla de suscripción independiente, sin TopBar de Main
                             navController.navigate(AppRoute.SubscriptionManager)
                         }
                     )
@@ -87,7 +89,6 @@ fun App() {
                     MainScreen(navController)
                 }
 
-                // Ruta raíz para gestionar suscripción desde el selector de perfil
                 composable(AppRoute.SubscriptionManager) {
                     SubscriptionScreen(
                         onBack = { navController.popBackStack() }
