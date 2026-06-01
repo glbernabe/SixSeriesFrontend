@@ -1,6 +1,5 @@
 package org.six.series.ui.components.screens
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,20 +22,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
-import org.six.series.application.usecases.profile.CreateProfileUseCase
-import org.six.series.application.usecases.profile.GetMyProfilesUseCase
 import org.six.series.model.profile.Profile
 import org.six.series.profileButtonColors
 import org.six.series.ui.components.viewmodels.ProfileUiState
 import org.six.series.ui.components.viewmodels.ProfileViewModel
 
+
 @Composable
 fun ProfileSelectorScreen(
     viewModel: ProfileViewModel,
     onProfileSelected: (Profile) -> Unit,
-    onManageSubscription: () -> Unit
+    onManageSubscription: () -> Unit,
+    onGoToLogin: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showSubscriptionAlert by viewModel.showSubscriptionAlert.collectAsStateWithLifecycle()
@@ -125,17 +122,38 @@ fun ProfileSelectorScreen(
                         }
                     }
 
-                    // ──────────────────────── Subscription link ────────────────────────
-                    TextButton(
-                        onClick = onManageSubscription,
-                        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                    Spacer(Modifier.height(16.dp))
+
+                    // ──────────────────────── Bottom Options ────────────────────────
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            "Gestionar suscripción →",
-                            color = Color(0xFF888888),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        // Enlace de suscripción
+                        TextButton(
+                            onClick = onManageSubscription,
+                            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                        ) {
+                            Text(
+                                "Gestionar suscripción →",
+                                color = Color(0xFF888888),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        // Opción 2: Botón de Cerrar Sesión (Logout)
+                        TextButton(
+                            onClick = onGoToLogin,
+                            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                        ) {
+                            Text(
+                                "Cerrar sesión / Cambiar de cuenta",
+                                color = Color(0xFFE50914), // Rojo discreto estilo plataforma de streaming
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
                     }
                 }
             }

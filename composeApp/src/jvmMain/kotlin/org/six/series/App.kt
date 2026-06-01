@@ -73,7 +73,7 @@ fun App() {
                                 try {
                                     val colorLong = hex.removePrefix("#").toLong(16) or 0xFF000000L
                                     appViewModel.setColorFromProfile(colorLong)
-                                } catch (e: Exception) { /* keep current color */ }
+                                } catch (e: Exception) { }
                             }
                             navController.navigate(AppRoute.Main) {
                                 popUpTo(AppRoute.ProfileSelector) { inclusive = true }
@@ -81,6 +81,9 @@ fun App() {
                         },
                         onManageSubscription = {
                             navController.navigate(AppRoute.SubscriptionManager)
+                        },
+                        onGoToLogin = {
+                            navController.navigate(AppRoute.Login) { popUpTo(0) }
                         }
                     )
                 }

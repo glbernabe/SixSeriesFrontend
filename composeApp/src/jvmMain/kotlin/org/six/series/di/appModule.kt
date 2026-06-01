@@ -9,6 +9,7 @@ import org.six.series.infrastructure.ktor.createHttpClient
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import org.six.series.application.usecases.content.GetContentUseCase
+import org.six.series.application.usecases.content.GetEpisodesUseCase
 import org.six.series.application.usecases.genre.GetGenresUseCase
 import org.six.series.application.usecases.payment.GetMyPaymentsUseCase
 import org.six.series.application.usecases.payment.MakePaymentUseCase
@@ -34,6 +35,7 @@ import org.six.series.model.payment.IPaymentRepository
 import org.six.series.model.profile.IProfileRepository
 import org.six.series.model.subscription.ISubscriptionRepository
 import org.six.series.ui.appsettings.AppSettings
+import org.six.series.ui.components.viewmodels.DetailViewModel
 import org.six.series.ui.components.viewmodels.MainPageViewModel
 import org.six.series.ui.components.viewmodels.ProfileViewModel
 import org.six.series.ui.components.viewmodels.SubscriptionViewModel
@@ -90,7 +92,7 @@ val appModulo = module {
     factory { UpdateProfileUseCase(get()) }
     factory { UploadAvatarUseCase(get()) }
     factory { CreateProfileUseCase(get()) }
-
+    factory { GetEpisodesUseCase(get()) }
     // ── ViewModels ──
     viewModel { AppViewModel(get(), get(), get()) }
     viewModel { LoginFormViewModel(loginUseCase = get()) }
@@ -113,4 +115,5 @@ val appModulo = module {
             makePaymentUseCase = get()
         )
     }
+    viewModel { DetailViewModel(get()) }
 }

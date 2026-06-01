@@ -72,11 +72,13 @@ fun HeroScreen(
                 item {
                     ContentRow(title = "Documentales", movies = documentaries,  onMovieClick = { onPlayContent(it) })
                 }
+
             }
 
             is MainUiState.Error -> {
                 item { ErrorNotification("Error al cargar contenido") { } }
             }
+
         }
     }
 }

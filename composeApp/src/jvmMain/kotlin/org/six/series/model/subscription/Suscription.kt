@@ -1,6 +1,5 @@
 package org.six.series.model.subscription
 
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,7 +8,7 @@ enum class SubscriptionType {
     @SerialName("standard") Standard,
     @SerialName("premium") Premium,
     @SerialName("standard_yearly") StandardYearly,
-    @SerialName("premium_yearly") PremiumYearly;  // añadir ; aquí
+    @SerialName("premium_yearly") PremiumYearly;
 
     fun toApiString(): String = when(this) {
         Standard -> "standard"

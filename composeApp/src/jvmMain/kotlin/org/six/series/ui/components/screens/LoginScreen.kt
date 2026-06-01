@@ -29,7 +29,6 @@ fun LoginScreen(
         if (state.isLoginSuccess) onLogin()
     }
 
-    // LoginComponent now owns the full-screen background + layout
     LoginComponent(
         state = state,
         onUsernameChange = viewModel::onUsernameChange,
@@ -40,15 +39,4 @@ fun LoginScreen(
         onRetryClick = { viewModel.login() },
     )
 
-    // Register link positioned via LoginScreen so it stays outside the card
-    // Rendered by LoginComponent's column already — but if you need it here:
-    // (keep this block only if RegisterButton is NOT inside LoginComponent)
-    /*
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        OutlinedButton(
-            onClick = { navController.navigate(AppRoute.Register) },
-            modifier = Modifier.padding(bottom = 32.dp)
-        ) { Text("¿No tienes cuenta? Regístrate") }
-    }
-    */
 }
