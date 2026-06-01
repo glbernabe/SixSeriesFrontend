@@ -29,6 +29,8 @@ import org.six.series.model.content.Content
 import org.six.series.ui.components.basic.AdaptiveTopBar
 import org.six.series.ui.components.basic.HeroScreen
 import org.six.series.ui.components.basic.content.SearchContentScreen
+import org.six.series.ui.components.basic.genre.GenreDetailScreen
+import org.six.series.ui.components.basic.genre.GenreDetailViewModel
 import org.six.series.ui.components.basic.genre.GenresGrid
 import org.six.series.ui.components.screens.ProfileScreen
 import org.six.series.ui.components.screens.SubscriptionScreen
@@ -42,16 +44,18 @@ fun MainComponent(rootNavController: NavController) {
     val context = LocalPlatformContext.current
     val imageLoader = SingletonImageLoader.get(context)
     var selectedContent by remember { mutableStateOf<Content?>(null) }
+    var selectedGenreName by remember { mutableStateOf<String?>(null) }
+
     val viewModel = remember {
         MainPageViewModel(
             context = context,
             imageLoader = imageLoader,
             getContentUseCase = getKoin().get(),
-            getGenresUseCase = getKoin().get()
+            getGenresUseCase = getKoin().get(),
+            getContentByGenreUseCase = getKoin().get(),
         )
     }
 
-    // Track content to play (lifted here so the dialog can overlay everything)
     var contentToPlay by remember { mutableStateOf<Content?>(null) }
 
     Scaffold(
@@ -91,6 +95,10 @@ fun MainComponent(rootNavController: NavController) {
                 }
 
                 composable(MainRoutes.Search) {
+                    LaunchedEffect(Unit) {
+                        viewModel.clearSearchSelection()
+                    }
+
                     SearchContentScreen(
                         searchQuery = viewModel.searchQuery,
                         searchResults = viewModel.searchResults,
@@ -103,9 +111,50 @@ fun MainComponent(rootNavController: NavController) {
                         }
                     )
                 }
-
                 composable(MainRoutes.Genres) {
-                    GenresGrid(viewModel.uiState)
+
+                    LaunchedEffect(Unit) {
+                        selectedGenreName = null
+                        viewModel.clearGenreSelection()
+                    }
+
+                    GenresGrid(
+                        state = viewModel.uiState,
+                        onGenreClick = { genreName ->
+                            selectedGenreName = genreName
+                            viewModel.onGenreSelected(genreName)
+                            internalNavController.navigate("genres_detail") {
+                                // Evita duplicar la pantalla en la pila si pulsas varias veces
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+
+                composable("genres_detail") {
+                    val genreName = selectedGenreName ?: return@composable
+
+                    GenreDetailScreen(
+                        genreName = genreName,
+                        content = viewModel.moviesByGenreResult,
+                        isLoading = viewModel.isLoadingGenreContent,
+                        errorMessage = viewModel.genreContentError,
+                        onMovieClick = { selectedMovie ->
+                            selectedContent = selectedMovie
+                            internalNavController.navigate(MainRoutes.Detail)
+                        },
+                        onBackClick = {
+                            selectedGenreName = null
+                            viewModel.clearGenreSelection()
+                            internalNavController.navigate(MainRoutes.Genres) {
+                                popUpTo(MainRoutes.Principal) {
+                                    saveState = false
+                                }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
+                    )
                 }
 
                 composable(MainRoutes.Profile) {
@@ -140,7 +189,6 @@ fun MainComponent(rootNavController: NavController) {
         }
     }
 
-    // Video player overlay
     contentToPlay?.let { content ->
         VideoPlayerScreen(
             content = content,

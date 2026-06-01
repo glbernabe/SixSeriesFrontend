@@ -7,5 +7,5 @@ import org.six.series.ui.components.main.MainComponent
 
 @Composable
 fun MainScreen(navController: NavController) {
-    MainComponent(navController)
+    MainComponent(rootNavController = navController)
 }

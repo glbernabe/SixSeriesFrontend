@@ -72,8 +72,6 @@ fun AdaptiveTopBar(
 ) {
     val tokenStorage = koinInject<TokenStorage>()
     val logoutUseCase = koinInject<LogOutUseCase>()
-
-    // Inyección de los ViewModels Singletons de Koin para purgar sus cachés al cerrar sesión
     val profileViewModel = koinInject<ProfileViewModel>()
     val subscriptionViewModel = koinInject<SubscriptionViewModel>()
 
@@ -153,10 +151,10 @@ fun AdaptiveTopBar(
                                 try {
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                                            saveState = false
                                         }
                                         launchSingleTop = true
-                                        restoreState = true
+                                        restoreState = false
                                     }
                                 } catch (ex: Exception) {
                                     errorMessage = "No se pudo abrir ${item.label ?: "la página"}"
@@ -232,12 +230,8 @@ fun AdaptiveTopBar(
                                         logoutUseCase.logout()
                                             .onSuccess {
                                                 errorMessage = "Sesión cerrada correctamente"
-
-                                                // Forzamos el vaciado de los Singletons de memoria de Koin
                                                 profileViewModel.clearState()
                                                 subscriptionViewModel.clearState()
-
-                                                // Destruimos completamente el Backstack de las pantallas del usuario
                                                 rootNavController.navigate(AppRoute.Login) {
                                                     popUpTo(0) { inclusive = true }
                                                 }
@@ -339,20 +333,18 @@ fun DisplayPanelOptions(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Real decoded username from DataStore storage session tokens
                 Text(
                     text = userData?.username ?: "Guest",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                // Real decoded role metadata hierarchy string with dynamic display mapping
                 Text(
                     text = when (userData?.role) {
                         "superuser" -> "Administrador"
                         "user" -> "Usuario"
                         null -> "No Role"
-                        else -> userData.role // Fallback for any other unexpected role value
+                        else -> userData.role
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)

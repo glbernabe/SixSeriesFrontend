@@ -34,7 +34,11 @@ import org.six.series.model.genre.Genre
 
 
 @Composable
-fun GenreCard(genre: Genre, topColor: Color) {
+fun GenreCard(
+    genre: Genre,
+    topColor: Color,
+    onGenreClick: (String) -> Unit
+) {
     val gradient = Brush.verticalGradient(
         colors = listOf(
             topColor,
@@ -51,7 +55,7 @@ fun GenreCard(genre: Genre, topColor: Color) {
             .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
             .background(brush = gradient)
-            .clickable { /* Navegar */ },
+            .clickable { onGenreClick(genre.name) },
         contentAlignment = Alignment.Center
     ) {
         Text(

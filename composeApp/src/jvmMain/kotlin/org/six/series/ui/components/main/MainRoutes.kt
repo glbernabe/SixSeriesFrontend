@@ -15,4 +15,7 @@ object MainRoutes {
 }
 
 @Serializable
+data class GenresDetail(val genreName: String)
+
+@Serializable
 data class DetailRoute(val contentId: String)

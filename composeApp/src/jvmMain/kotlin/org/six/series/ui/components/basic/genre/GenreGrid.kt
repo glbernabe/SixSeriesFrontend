@@ -24,6 +24,7 @@ import org.six.series.ui.components.viewmodels.MainUiState
 @Composable
 fun GenresGrid(
     state: MainUiState,
+    onGenreClick: (genreName: String) -> Unit,
 ) {
 
     val baseColors = listOf(
@@ -63,7 +64,8 @@ fun GenresGrid(
 
                         GenreCard(
                             genre = genre,
-                            topColor = baseColor
+                            topColor = baseColor,
+                            onGenreClick = { onGenreClick(genre.name) },
                         )
                     }
                 }

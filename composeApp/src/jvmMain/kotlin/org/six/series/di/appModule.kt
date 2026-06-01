@@ -10,6 +10,7 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import org.six.series.application.usecases.content.GetContentUseCase
 import org.six.series.application.usecases.content.GetEpisodesUseCase
+import org.six.series.application.usecases.genre.GetContentByGenreUseCase
 import org.six.series.application.usecases.genre.GetGenresUseCase
 import org.six.series.application.usecases.payment.GetMyPaymentsUseCase
 import org.six.series.application.usecases.payment.MakePaymentUseCase
@@ -35,6 +36,7 @@ import org.six.series.model.payment.IPaymentRepository
 import org.six.series.model.profile.IProfileRepository
 import org.six.series.model.subscription.ISubscriptionRepository
 import org.six.series.ui.appsettings.AppSettings
+import org.six.series.ui.components.basic.genre.GenreDetailViewModel
 import org.six.series.ui.components.viewmodels.DetailViewModel
 import org.six.series.ui.components.viewmodels.MainPageViewModel
 import org.six.series.ui.components.viewmodels.ProfileViewModel
@@ -83,6 +85,7 @@ val appModulo = module {
     factory { LoginUseCase(get()) }
     factory { GetContentUseCase(get()) }
     factory { GetGenresUseCase(get()) }
+    factory { GetContentByGenreUseCase(get()) }
     factory { GetMySubscriptionUseCase(get()) }
     factory { CreateSubscriptionUseCase(get()) }
     factory { CancelSubscriptionUseCase(get()) }
@@ -97,7 +100,7 @@ val appModulo = module {
     viewModel { AppViewModel(get(), get(), get()) }
     viewModel { LoginFormViewModel(loginUseCase = get()) }
     viewModel { RegisterFormViewModel(get()) }
-    viewModel { MainPageViewModel(get(), get(), get(), get()) }
+    viewModel { MainPageViewModel(get(), get(), get(), get(), get())}
     viewModel {
         ProfileViewModel(
             getMyProfilesUseCase = get(),
@@ -115,5 +118,12 @@ val appModulo = module {
             makePaymentUseCase = get()
         )
     }
+    viewModel { (genreName: String) ->
+        GenreDetailViewModel(
+            genreName = genreName,
+            getContentByGenreUseCase = get()
+        )
+    }
+
     viewModel { DetailViewModel(get()) }
 }

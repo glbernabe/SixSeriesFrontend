@@ -8,6 +8,8 @@ import io.ktor.http.contentType
 import org.six.series.model.content.Content
 import org.six.series.model.genre.Genre
 import org.six.series.model.genre.IGenreRepository
+import java.text.Normalizer
+import java.util.regex.Pattern
 
 class RestGenreRepository(
     private val url: String,
@@ -25,8 +27,18 @@ class RestGenreRepository(
         }
     }
 
-    override suspend fun getContentByGenre(genreId: String): List<Content> {
-        TODO("Not yet implemented")
+    override suspend fun getContentByGenre(genreName: String): List<Content> {
+        return try {
+            val normalizedName = Normalizer.normalize(genreName, Normalizer.Form.NFD)
+            val pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+")
+            val cleanGenreName = pattern.matcher(normalizedName).replaceAll("").lowercase()
+
+            cliente.get("$url/$cleanGenreName") {
+                contentType(ContentType.Application.Json)
+            }.body<List<Content>>()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     override suspend fun addContent(content: Content) {

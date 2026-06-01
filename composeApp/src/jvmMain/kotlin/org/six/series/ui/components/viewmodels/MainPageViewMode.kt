@@ -10,6 +10,7 @@ import coil3.PlatformContext
 import coil3.request.ImageRequest
 import kotlinx.coroutines.*
 import org.six.series.application.usecases.content.GetContentUseCase
+import org.six.series.application.usecases.genre.GetContentByGenreUseCase
 import org.six.series.application.usecases.genre.GetGenresUseCase
 import org.six.series.model.content.Content
 import org.six.series.model.genre.Genre
@@ -27,6 +28,7 @@ class MainPageViewModel(
     private val context: PlatformContext,
     private val getContentUseCase: GetContentUseCase,
     private val getGenresUseCase: GetGenresUseCase,
+    private val getContentByGenreUseCase: GetContentByGenreUseCase,
     private val imageLoader: ImageLoader
 ) : ViewModel() {
 
@@ -41,6 +43,17 @@ class MainPageViewModel(
         private set
 
     var isSearching by mutableStateOf(false)
+        private set
+
+    // --- Genre Detail States ---
+    var moviesByGenreResult by mutableStateOf<List<Content>>(emptyList())
+        private set
+
+    var isLoadingGenreContent by mutableStateOf(false)
+        private set
+
+    // Añadimos este estado para capturar mensajes de error específicos de los géneros
+    var genreContentError by mutableStateOf<String?>(null)
         private set
 
     init {
@@ -69,13 +82,11 @@ class MainPageViewModel(
         }
     }
 
-    // --- Research Function ---
     fun updateSearchQuery(query: String) {
         searchQuery = query
         if (query.isBlank()) {
             searchResults = emptyList()
         } else {
-            // Will search automatically while you type
             performSearch()
         }
     }
@@ -84,12 +95,10 @@ class MainPageViewModel(
         if (searchQuery.isBlank()) return
 
         uiState.let { currentStatus ->
-            // It loads the current content catalog before searching for better experience
             if (currentStatus is MainUiState.Success) {
                 viewModelScope.launch {
                     isSearching = true
 
-                    // Simulates an async backend or local repository filter operation matching titles
                     val filtered = currentStatus.movies.filter { content ->
                         content.title.contains(searchQuery, ignoreCase = true)
                     }
@@ -99,6 +108,10 @@ class MainPageViewModel(
                 }
             }
         }
+    }
+
+    fun clearSearchSelection() {
+        updateSearchQuery("")
     }
 
     private fun preloadImages(movies: List<Content>) {
@@ -113,5 +126,33 @@ class MainPageViewModel(
                 }
             }
         }
+    }
+
+    // --- Genre Functions ---
+    fun onGenreSelected(genreName: String) {
+        viewModelScope.launch {
+            isLoadingGenreContent = true
+            genreContentError = null // Reseteamos errores previos antes de iniciar la petición
+
+            val result = getContentByGenreUseCase(genreName)
+
+            if (result.isSuccess) {
+                moviesByGenreResult = result.getOrThrow()
+                if (moviesByGenreResult.isEmpty()) {
+                    genreContentError = "No se encontraron contenidos para el género: $genreName"
+                }
+            } else {
+                moviesByGenreResult = emptyList()
+                genreContentError = result.exceptionOrNull()?.message ?: "Error al conectar con el servidor"
+            }
+            isLoadingGenreContent = false
+        }
+    }
+
+    // Función crucial para limpiar el estado de la búsqueda al salir de la pantalla
+    fun clearGenreSelection() {
+        moviesByGenreResult = emptyList()
+        isLoadingGenreContent = false
+        genreContentError = null
     }
 }
