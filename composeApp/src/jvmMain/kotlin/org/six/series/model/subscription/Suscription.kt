@@ -8,13 +8,15 @@ enum class SubscriptionType {
     @SerialName("standard") Standard,
     @SerialName("premium") Premium,
     @SerialName("standard_yearly") StandardYearly,
-    @SerialName("premium_yearly") PremiumYearly;
+    @SerialName("premium_yearly") PremiumYearly,
+    @SerialName("admin_life") AdminLife;
 
     fun toApiString(): String = when(this) {
         Standard -> "standard"
         Premium -> "premium"
         StandardYearly -> "standard_yearly"
         PremiumYearly -> "premium_yearly"
+        AdminLife -> "admin_life"
     }
 }
 

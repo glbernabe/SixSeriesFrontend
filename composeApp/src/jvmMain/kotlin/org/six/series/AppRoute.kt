@@ -6,4 +6,5 @@ object AppRoute {
     val ProfileSelector = "profile_selector"
     val Main = "main"
     val SubscriptionManager = "subscription_manage"
+    val AdminPanel = "admin_panel"
 }

@@ -97,6 +97,12 @@ class SubscriptionViewModel(
                         SubscriptionType.Premium        -> 13.99f
                         SubscriptionType.StandardYearly -> 79.99f
                         SubscriptionType.PremiumYearly  -> 139.99f
+                        SubscriptionType.AdminLife      -> 0.0f // O manejar error
+                    }
+
+                    if (type == SubscriptionType.AdminLife) {
+                        _paymentError.value = "No puedes contratar este plan, si desea trabajar con nosotros contáctenos!."
+                        return@launch
                     }
                     makePaymentUseCase(PaymentRequest(sub.id, method, amount))
                         .onSuccess {

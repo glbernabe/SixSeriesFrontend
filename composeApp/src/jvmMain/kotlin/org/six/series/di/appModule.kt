@@ -8,10 +8,20 @@ import org.six.series.infrastructure.TokenStorage
 import org.six.series.infrastructure.ktor.createHttpClient
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import org.six.series.application.usecases.content.AddContentUseCase
+import org.six.series.application.usecases.content.AddEpisodeUseCase
+import org.six.series.application.usecases.content.DeleteContentUseCase
+import org.six.series.application.usecases.content.DeleteEpisodeUseCase
 import org.six.series.application.usecases.content.GetContentUseCase
 import org.six.series.application.usecases.content.GetEpisodesUseCase
+import org.six.series.application.usecases.content.ModifyEpisodeUseCase
+import org.six.series.application.usecases.content.UpdateContentUseCase
+import org.six.series.application.usecases.genre.AddContentToGenreUseCase
+import org.six.series.application.usecases.genre.AddGenreUseCase
+import org.six.series.application.usecases.genre.DeleteGenreUseCase
 import org.six.series.application.usecases.genre.GetContentByGenreUseCase
 import org.six.series.application.usecases.genre.GetGenresUseCase
+import org.six.series.application.usecases.genre.UpdateGenreUseCase
 import org.six.series.application.usecases.payment.GetMyPaymentsUseCase
 import org.six.series.application.usecases.payment.MakePaymentUseCase
 import org.six.series.application.usecases.profile.CreateProfileUseCase
@@ -21,9 +31,13 @@ import org.six.series.application.usecases.profile.UploadAvatarUseCase
 import org.six.series.application.usecases.subscription.CancelSubscriptionUseCase
 import org.six.series.application.usecases.subscription.CreateSubscriptionUseCase
 import org.six.series.application.usecases.subscription.GetMySubscriptionUseCase
+import org.six.series.application.usecases.user.DeleteUserByIdUseCase
+import org.six.series.application.usecases.user.GetAllUsersUseCase
 import org.six.series.application.usecases.user.LogOutUseCase
 import org.six.series.application.usecases.user.LoginUseCase
 import org.six.series.application.usecases.user.RegisterUseCase
+import org.six.series.application.usecases.user.UpdateUserAccountUseCase
+import org.six.series.application.usecases.user.UpdateUserStatusUseCase
 import org.six.series.infrastructure.RestContentRepository
 import org.six.series.infrastructure.RestGenreRepository
 import org.six.series.infrastructure.RestPaymentRepository
@@ -37,6 +51,7 @@ import org.six.series.model.profile.IProfileRepository
 import org.six.series.model.subscription.ISubscriptionRepository
 import org.six.series.ui.appsettings.AppSettings
 import org.six.series.ui.components.basic.genre.GenreDetailViewModel
+import org.six.series.ui.components.screens.admin.viewmodel.AdminPanelViewModel
 import org.six.series.ui.components.viewmodels.DetailViewModel
 import org.six.series.ui.components.viewmodels.MainPageViewModel
 import org.six.series.ui.components.viewmodels.ProfileViewModel
@@ -96,6 +111,26 @@ val appModulo = module {
     factory { UploadAvatarUseCase(get()) }
     factory { CreateProfileUseCase(get()) }
     factory { GetEpisodesUseCase(get()) }
+
+    // ── Casos de Uso del Panel de Administración (Nuevos) ──
+    factory { GetAllUsersUseCase(get()) }
+    factory { UpdateUserStatusUseCase(get()) }
+    factory { UpdateUserAccountUseCase(get()) }
+    factory { DeleteUserByIdUseCase(get()) }
+
+    factory { AddContentUseCase(get()) }
+    factory { UpdateContentUseCase(get()) }
+    factory { DeleteContentUseCase(get()) }
+
+    factory { AddEpisodeUseCase(get()) }
+    factory { ModifyEpisodeUseCase(get()) }
+    factory { DeleteEpisodeUseCase(get()) }
+
+    factory { AddGenreUseCase(get()) }
+    factory { UpdateGenreUseCase(get()) }
+    factory { DeleteGenreUseCase(get()) }
+    factory { AddContentToGenreUseCase(get()) }
+
     // ── ViewModels ──
     viewModel { AppViewModel(get(), get(), get()) }
     viewModel { LoginFormViewModel(loginUseCase = get()) }
@@ -124,6 +159,13 @@ val appModulo = module {
             getContentByGenreUseCase = get()
         )
     }
-
     viewModel { DetailViewModel(get()) }
+
+    viewModel {
+        AdminPanelViewModel(
+            getAllUsersUseCase = get(),
+            getContentUseCase = get(),
+            getGenresUseCase = get(),
+        )
+    }
 }

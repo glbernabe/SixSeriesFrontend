@@ -14,6 +14,8 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.six.series.model.user.UserAccount
+import org.six.series.model.user.UserStatusUpdate
 
 @Serializable
 data class ErrorDetail(
@@ -89,6 +91,59 @@ class RestUserRepository(
             .filterIsInstance<BearerAuthProvider>()
             .firstOrNull()
             ?.clearToken()
+    }
+
+    override suspend fun getAllUsers(): List<UserAccount> {
+        return try {
+            cliente.get("$url/") {
+                contentType(ContentType.Application.Json)
+            }.body()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    override suspend fun updateUserAccount(updatedUser: UserAccount): String {
+        return try {
+            val response = cliente.put("$url/${updatedUser.id}") {
+                contentType(ContentType.Application.Json)
+                setBody(updatedUser)
+            }
+
+            if (response.status.value in 200..299) {
+                response.body<String>()
+            } else {
+                val errorJson = try {
+                    response.body<String>()
+                } catch(e: Exception) { "Error" }
+                throw Exception(errorJson)
+            }
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    override suspend fun updateUserStatus(userId: String, status: Boolean): Boolean {
+        return try {
+            val body = UserStatusUpdate(isActive = status)
+
+            cliente.put("$url/$userId/status") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }.body()
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    override suspend fun deleteUserById(userId: String): Boolean {
+        return try {
+            cliente.delete("$url/$userId") {
+                contentType(ContentType.Application.Json)
+            }.body()
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
 

@@ -1,5 +1,6 @@
 package org.six.series.ui.components.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,10 +23,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import org.six.series.AppRoute
+import org.six.series.application.usecases.user.LogOutUseCase
+import org.six.series.infrastructure.UserTokenData
 import org.six.series.model.profile.Profile
 import org.six.series.profileButtonColors
 import org.six.series.ui.components.viewmodels.ProfileUiState
 import org.six.series.ui.components.viewmodels.ProfileViewModel
+import sun.security.krb5.KrbException.errorMessage
 
 
 @Composable
@@ -33,22 +41,57 @@ fun ProfileSelectorScreen(
     viewModel: ProfileViewModel,
     onProfileSelected: (Profile) -> Unit,
     onManageSubscription: () -> Unit,
+    userData: UserTokenData?,
     onGoToLogin: () -> Unit,
+    onGoToAdminPanel: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showSubscriptionAlert by viewModel.showSubscriptionAlert.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
+    val logOutUseCase = koinInject<LogOutUseCase>()
+    val scope = rememberCoroutineScope()
+
+    // Corregido: Evaluamos si es superusuario basándonos en el estado dinámico del perfil cargado.
+    // Esto evita que el botón dependa del parámetro estático 'userData' que se queda congelado al hacer logout.
+    val isSuperuser = userData?.role == "superuser" && uiState !is ProfileUiState.Loading
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
-
+    println(userData?.role)
+    println(isSuperuser)
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0D0D0D)),
         contentAlignment = Alignment.Center
     ) {
+        if (isSuperuser) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                Button(
+                    onClick = onGoToAdminPanel,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                ) {
+                    Text(
+                        text = "Panel de Control ⚙",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
         when (val state = uiState) {
             is ProfileUiState.Loading -> {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -68,7 +111,12 @@ fun ProfileSelectorScreen(
 
             else -> {
                 val profiles = if (state is ProfileUiState.Success) listOf(state.profile) else emptyList()
-                val totalItems = if (profiles.size < 5) profiles.size + 1 else profiles.size
+
+                val totalItems = if (isSuperuser) {
+                    profiles.size
+                } else {
+                    if (profiles.size < 5) profiles.size + 1 else profiles.size
+                }
 
                 Column(
                     modifier = Modifier
@@ -77,7 +125,6 @@ fun ProfileSelectorScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(40.dp)
                 ) {
-                    // ── Header ────────────────────────────────────────────────
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -100,7 +147,6 @@ fun ProfileSelectorScreen(
 
                     Spacer(Modifier.height(100.dp))
 
-                    // ──────────────────────── Profile grid ────────────────────────
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(count = maxOf(1, totalItems)),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -115,7 +161,8 @@ fun ProfileSelectorScreen(
                                 onClick = { onProfileSelected(profile) }
                             )
                         }
-                        if (profiles.size < 5) {
+
+                        if (!isSuperuser && profiles.size < 5) {
                             item {
                                 AddProfileCard(onClick = { showCreateDialog = true })
                             }
@@ -124,12 +171,10 @@ fun ProfileSelectorScreen(
 
                     Spacer(Modifier.height(16.dp))
 
-                    // ──────────────────────── Bottom Options ────────────────────────
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Enlace de suscripción
                         TextButton(
                             onClick = onManageSubscription,
                             modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
@@ -142,14 +187,22 @@ fun ProfileSelectorScreen(
                             )
                         }
 
-                        // Opción 2: Botón de Cerrar Sesión (Logout)
                         TextButton(
-                            onClick = onGoToLogin,
+                            onClick = {
+                                scope.launch {
+                                    logOutUseCase.logout()
+                                        .onSuccess {
+                                            // Forzamos al ViewModel local a limpiar su estado y pasar a Loading
+                                            viewModel.clearState()
+                                            onGoToLogin()
+                                        }
+                                }
+                            },
                             modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
                         ) {
                             Text(
                                 "Cerrar sesión / Cambiar de cuenta",
-                                color = Color(0xFFE50914), // Rojo discreto estilo plataforma de streaming
+                                color = Color(0xFFE50914),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal
                             )
@@ -160,7 +213,7 @@ fun ProfileSelectorScreen(
         }
     }
 
-    if (showCreateDialog) {
+    if (showCreateDialog && !isSuperuser) {
         CreateProfileDialog(
             onConfirm = { name ->
                 showCreateDialog = false
@@ -170,7 +223,7 @@ fun ProfileSelectorScreen(
         )
     }
 
-    if (showSubscriptionAlert) {
+    if (showSubscriptionAlert && !isSuperuser) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissSubscriptionAlert() },
             containerColor = Color(0xFF1A1A1A),
@@ -191,8 +244,6 @@ fun ProfileSelectorScreen(
         )
     }
 }
-
-// ──────────────────────── ProfileCard  ────────────────────────
 
 @Composable
 private fun ProfileCard(profile: Profile, onClick: () -> Unit) {

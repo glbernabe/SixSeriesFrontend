@@ -5,6 +5,14 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Clock
 
+enum class Permissions (
+    val total: String,
+    val create: String,
+    val edit: String,
+    val read: String,
+    val none: String
+)
+
 data class TokenJwtHeader(val alg: String, val typ: String)
 
 data class TokenJwtPayload(val claims: Map<String, Any> = emptyMap()) {
@@ -20,7 +28,8 @@ data class TokenJwtFirma(val firma: String)
 // Structured data representation of the custom claims inside the token
 data class UserTokenData(
     val username: String?,
-    val role: String?
+    val role: String?,
+    val permissions: String?
 )
 
 class TokenJwt(val rawToken: String) {
@@ -44,8 +53,9 @@ class TokenJwt(val rawToken: String) {
      */
     fun getUserData(): UserTokenData {
         return UserTokenData(
-            username = payload.get<String>("username") ?: payload.userId,
-            role = payload.get<String>("role")
+            username = payload.get<String>("sub"),
+            role = payload.get<String>("role"),
+            permissions = payload.get<String>("permissions")
         )
     }
 

@@ -149,12 +149,14 @@ fun AdaptiveTopBar(
                                 showUserMenu = !showUserMenu
                             } else {
                                 try {
-                                    navController.navigate(item.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = false
+                                    item.route?.let {
+                                        navController.navigate(it) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = false
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = false
                                         }
-                                        launchSingleTop = true
-                                        restoreState = false
                                     }
                                 } catch (ex: Exception) {
                                     errorMessage = "No se pudo abrir ${item.label ?: "la página"}"

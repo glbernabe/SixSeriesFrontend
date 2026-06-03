@@ -1,6 +1,9 @@
 package org.six.series.infrastructure
 
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class TokenStorage(private val settings: Settings) {
     companion object {
@@ -8,19 +11,19 @@ class TokenStorage(private val settings: Settings) {
         private const val KEY_REFRESH_TOKEN = "refresh_token"
     }
 
+    private val _userDataFlow = MutableStateFlow<UserTokenData?>(decodeCurrentUserData())
+    val userDataFlow: StateFlow<UserTokenData?> = _userDataFlow.asStateFlow()
+
     fun saveTokens(accessToken: String, refreshToken: String) {
         settings.putString(KEY_ACCESS_TOKEN, accessToken)
         settings.putString(KEY_REFRESH_TOKEN, refreshToken)
+        _userDataFlow.value = decodeCurrentUserData()
     }
 
     fun getAccessToken(): String? = settings.getStringOrNull(KEY_ACCESS_TOKEN)
     fun getRefreshToken(): String? = settings.getStringOrNull(KEY_REFRESH_TOKEN)
 
-    /**
-     * Decodes the currently stored access token and extracts the structured user data.
-     * Returns null if no token is found or if the token format is invalid.
-     */
-    fun getUserData(): UserTokenData? {
+    private fun decodeCurrentUserData(): UserTokenData? {
         val token = getAccessToken() ?: return null
         return try {
             TokenJwt(token).getUserData()
@@ -29,8 +32,11 @@ class TokenStorage(private val settings: Settings) {
         }
     }
 
+    fun getUserData(): UserTokenData? = _userDataFlow.value
+
     fun clear() {
         settings.remove(KEY_ACCESS_TOKEN)
         settings.remove(KEY_REFRESH_TOKEN)
+        _userDataFlow.value = null
     }
 }

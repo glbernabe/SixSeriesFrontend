@@ -6,17 +6,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.six.series.infrastructure.TokenStorage
 import org.six.series.ui.appsettings.AppViewModel
+import org.six.series.ui.components.main.MainScreen
+import org.six.series.ui.components.screens.admin.AdminPanelScreen
 import org.six.series.ui.components.screens.LoginScreen
-import org.six.series.ui.components.screens.MainScreen
 import org.six.series.ui.components.screens.ProfileSelectorScreen
 import org.six.series.ui.components.screens.RegisterScreen
 import org.six.series.ui.components.screens.SubscriptionScreen
@@ -29,6 +35,9 @@ fun App() {
     val navController = rememberNavController()
     val startDestination by appViewModel.startDestination.collectAsState()
     val appColorLong by appViewModel.appColor.collectAsState()
+    val tokenStorage = koinInject<TokenStorage>()
+
+    val userData by tokenStorage.userDataFlow.collectAsState()
 
     if (startDestination == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -84,6 +93,10 @@ fun App() {
                         },
                         onGoToLogin = {
                             navController.navigate(AppRoute.Login) { popUpTo(0) }
+                        },
+                        userData = userData,
+                        onGoToAdminPanel = {
+                            navController.navigate(AppRoute.AdminPanel)
                         }
                     )
                 }
@@ -95,6 +108,12 @@ fun App() {
                 composable(AppRoute.SubscriptionManager) {
                     SubscriptionScreen(
                         onBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable(AppRoute.AdminPanel) {
+                    AdminPanelScreen(
+                        onBackToProfiles = { navController.popBackStack() }
                     )
                 }
             }

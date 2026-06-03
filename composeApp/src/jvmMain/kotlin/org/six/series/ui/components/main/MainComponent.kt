@@ -1,11 +1,8 @@
 package org.six.series.ui.components.main
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import org.koin.compose.viewmodel.koinViewModel
 import org.six.series.model.content.ContentType
 import org.six.series.ui.components.screens.DetailScreen
 import org.six.series.ui.components.viewmodels.DetailViewModel
-import org.six.series.ui.components.viewmodels.MainUiState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +27,6 @@ import org.six.series.ui.components.basic.AdaptiveTopBar
 import org.six.series.ui.components.basic.HeroScreen
 import org.six.series.ui.components.basic.content.SearchContentScreen
 import org.six.series.ui.components.basic.genre.GenreDetailScreen
-import org.six.series.ui.components.basic.genre.GenreDetailViewModel
 import org.six.series.ui.components.basic.genre.GenresGrid
 import org.six.series.ui.components.screens.ProfileScreen
 import org.six.series.ui.components.screens.SubscriptionScreen
@@ -39,7 +35,7 @@ import org.six.series.ui.components.viewmodels.MainPageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainComponent(rootNavController: NavController) {
+fun MainScreen(rootNavController: NavController) {
     val internalNavController = rememberNavController()
     val context = LocalPlatformContext.current
     val imageLoader = SingletonImageLoader.get(context)

@@ -220,6 +220,7 @@ fun CurrentSubscriptionCard(
                     SubscriptionType.Premium        -> "Premium Mensual"
                     SubscriptionType.StandardYearly -> "Estándar Anual"
                     SubscriptionType.PremiumYearly  -> "Premium Anual"
+                    SubscriptionType.AdminLife -> "Administrativa"
                 }
                 Text("Plan: $planName", color = Color(0xFFE6E1E5))
                 Text(
@@ -419,6 +420,7 @@ fun PaymentMethodDialog(
                     SubscriptionType.Premium        -> "Premium Mensual — 13.99 €"
                     SubscriptionType.StandardYearly -> "Estándar Anual — 79.99 €"
                     SubscriptionType.PremiumYearly  -> "Premium Anual — 139.99 €"
+                    SubscriptionType.AdminLife -> "Desarrolladores Only"
                 }
                 Text(planLabel, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 HorizontalDivider()
