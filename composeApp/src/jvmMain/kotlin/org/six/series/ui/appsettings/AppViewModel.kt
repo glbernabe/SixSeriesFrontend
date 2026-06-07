@@ -13,7 +13,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,6 +30,12 @@ class AppViewModel(
         initialValue = AppSettings.DEFAULT_COLOR
     )
 
+    val activeProfileName = settings.profileName.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
     fun updateAppColor(colorHex: Long) {
         viewModelScope.launch {
             settings.updateColor(colorHex)
@@ -39,6 +44,10 @@ class AppViewModel(
 
     fun setColorFromProfile(colorLong: Long) {
         updateAppColor(colorLong)
+    }
+
+    fun saveProfileName(name: String) {
+        viewModelScope.launch { settings.updateProfileName(name) }
     }
 
     private val _startDestination = MutableStateFlow<String?>(null)

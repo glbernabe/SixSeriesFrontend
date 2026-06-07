@@ -20,7 +20,7 @@ fun ImagePickerPreviewComponent(
     imageUrl: String? = null,
     selectedFile: PlatformFile?,
     onFileSelected: (PlatformFile?) -> Unit,
-    onConfirm:  () -> Unit,
+    onConfirm: () -> Unit,
 ) {
     //bytes de la imagen
     var imageBytes by remember(selectedFile) { mutableStateOf<ByteArray?>(null) }
@@ -58,7 +58,7 @@ fun ImagePickerPreviewComponent(
         ) {
             if (modelToDisplay != null) {
                 AsyncImage(
-                    model =  imageRequest,
+                    model = imageRequest,
                     contentDescription = "Vista previa",
                     modifier = Modifier.fillMaxSize()
                 )

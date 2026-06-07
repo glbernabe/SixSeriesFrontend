@@ -15,8 +15,8 @@ class AppSettings(databasePath: String) {
     )
 
     companion object {
-        private val THEME_COLOR_KEY  = longPreferencesKey("theme_color_hex")
-        private val AVATAR_URL_KEY   = stringPreferencesKey("avatar_url")
+        private val THEME_COLOR_KEY = longPreferencesKey("theme_color_hex")
+        private val AVATAR_URL_KEY = stringPreferencesKey("avatar_url")
         private val PROFILE_NAME_KEY = stringPreferencesKey("profile_name")
         const val DEFAULT_COLOR = 0xFF6A6A69L
     }

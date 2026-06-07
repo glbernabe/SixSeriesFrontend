@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class RegisterFormViewModel(
     private val registerUseCase: RegisterUseCase
-): ViewModel() {
+) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state.asStateFlow()
@@ -22,7 +22,8 @@ class RegisterFormViewModel(
         _state.update {
             it.copy(
                 username = username,
-                usernameError = if (username.length < 8) "Debe tener entre 8 y 64 caracteres" else null)
+                usernameError = if (username.length < 8) "Debe tener entre 8 y 64 caracteres" else null
+            )
         }
         validForm()
     }
@@ -31,7 +32,8 @@ class RegisterFormViewModel(
         _state.update {
             it.copy(
                 email = email,
-                emailError = if (email.contains("@")) null else "Email no válido")
+                emailError = if (email.contains("@")) null else "Email no válido"
+            )
         }
         validForm()
     }
@@ -47,7 +49,7 @@ class RegisterFormViewModel(
         validForm()
     }
 
-    fun onRepeatPasswordChange(repeatPassword: String){
+    fun onRepeatPasswordChange(repeatPassword: String) {
         _state.update {
             it.copy(
                 repeatePassword = repeatPassword
@@ -91,11 +93,11 @@ class RegisterFormViewModel(
                 s.emailError == null &&
                 s.passwordError == null &&
                 s.repeatePasswordError == null
-        _state.value=state.value.copy(isValid = isFormValid.value)
+        _state.value = state.value.copy(isValid = isFormValid.value)
 
     }
 
-    fun register(){
+    fun register() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             try {
@@ -109,20 +111,18 @@ class RegisterFormViewModel(
                 registerUseCase.register(registerCommand)
                 _state.update { it.copy(isRegisterSuccess = true) }
 
-            }catch(e: Exception)  {
+            } catch (e: Exception) {
                 _state.update {
                     it.copy(
                         isLoading = false,
                         errorMessage = e.message ?: "Error con el registro..."
                     )
                 }
-            }
-            finally {
+            } finally {
                 _state.value = _state.value.copy(isLoading = false)
             }
         }
     }
-
 
 
 }

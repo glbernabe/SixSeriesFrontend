@@ -45,7 +45,9 @@ fun SearchContentScreen(
                     focusedTextColor = MaterialTheme.colorScheme.primary,
                     unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
                     focusedPlaceholderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f),
-                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                        alpha = 0.5f
+                    ),
                     focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.4f)
                 )

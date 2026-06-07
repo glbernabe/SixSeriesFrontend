@@ -25,6 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.six.series.model.content.Content
 import org.six.series.profileButtonColors
+
 @Composable
 fun VideoPlayerScreen(
     content: Content,

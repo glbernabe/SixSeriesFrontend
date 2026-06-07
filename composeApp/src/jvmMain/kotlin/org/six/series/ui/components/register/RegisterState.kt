@@ -9,7 +9,7 @@ data class RegisterState(
     // UI States
     val isLoading: Boolean = false,
     val isRegisterSuccess: Boolean = false,
-    val isValid:Boolean = false,
+    val isValid: Boolean = false,
     // Errores específicos de campo (validación local)
 
     val usernameError: String? = null,

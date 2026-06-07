@@ -25,6 +25,7 @@ sealed class SubscriptionUiState {
         val payments: List<Payment>,
         val showingPlanSelector: Boolean = true
     ) : SubscriptionUiState()
+
     data class Error(val message: String) : SubscriptionUiState()
 }
 
@@ -93,15 +94,16 @@ class SubscriptionViewModel(
             createSubscriptionUseCase(type)
                 .onSuccess { sub ->
                     val amount = when (type) {
-                        SubscriptionType.Standard       -> 7.99f
-                        SubscriptionType.Premium        -> 13.99f
+                        SubscriptionType.Standard -> 7.99f
+                        SubscriptionType.Premium -> 13.99f
                         SubscriptionType.StandardYearly -> 79.99f
-                        SubscriptionType.PremiumYearly  -> 139.99f
-                        SubscriptionType.AdminLife      -> 0.0f // O manejar error
+                        SubscriptionType.PremiumYearly -> 139.99f
+                        SubscriptionType.AdminLife -> 0.0f // O manejar error
                     }
 
                     if (type == SubscriptionType.AdminLife) {
-                        _paymentError.value = "No puedes contratar este plan, si desea trabajar con nosotros contáctenos!."
+                        _paymentError.value =
+                            "No puedes contratar este plan, si desea trabajar con nosotros contáctenos!."
                         return@launch
                     }
                     makePaymentUseCase(PaymentRequest(sub.id, method, amount))
@@ -112,7 +114,8 @@ class SubscriptionViewModel(
                             load()
                         }
                         .onFailure { exception ->
-                            _paymentError.value = exception.message ?: "Pago fallido. Inténtalo de nuevo."
+                            _paymentError.value =
+                                exception.message ?: "Pago fallido. Inténtalo de nuevo."
                         }
                 }
                 .onFailure { exception ->
@@ -136,7 +139,8 @@ class SubscriptionViewModel(
                     load()
                 }
                 .onFailure { exception ->
-                    _actionMessage.value = exception.message ?: "Error al descartar la suscripción pendiente."
+                    _actionMessage.value =
+                        exception.message ?: "Error al descartar la suscripción pendiente."
                     load()
                 }
         }
@@ -166,5 +170,7 @@ class SubscriptionViewModel(
         _paymentError.value = null
     }
 
-    fun dismissMessage() { _actionMessage.value = null }
+    fun dismissMessage() {
+        _actionMessage.value = null
+    }
 }

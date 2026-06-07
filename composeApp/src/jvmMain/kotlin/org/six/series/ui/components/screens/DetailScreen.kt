@@ -23,6 +23,8 @@ import org.six.series.ui.components.viewmodels.DetailViewModel
 fun DetailScreen(
     content: Content,
     viewModel: DetailViewModel,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {},
     onPlayEpisode: (Episode) -> Unit,
     onPlayMovie: (Content) -> Unit
 ) {
@@ -43,7 +45,9 @@ fun DetailScreen(
                         onPlay = {
                             if (s.episodes.isEmpty()) onPlayMovie(s.content)
                             else onPlayEpisode(s.episodes.first())
-                        }
+                        },
+                        isFavorite = isFavorite,
+                        onToggleFavorite = onToggleFavorite
                     )
                 }
 

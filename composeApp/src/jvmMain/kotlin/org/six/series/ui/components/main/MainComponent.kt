@@ -1,8 +1,5 @@
 package org.six.series.ui.components.main
-import org.koin.compose.viewmodel.koinViewModel
-import org.six.series.model.content.ContentType
-import org.six.series.ui.components.screens.DetailScreen
-import org.six.series.ui.components.viewmodels.DetailViewModel
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,17 +18,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.SingletonImageLoader
 import coil3.compose.LocalPlatformContext
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.mp.KoinPlatform.getKoin
 import org.six.series.model.content.Content
+import org.six.series.model.content.ContentType
 import org.six.series.ui.components.basic.AdaptiveTopBar
 import org.six.series.ui.components.basic.HeroScreen
+import org.six.series.ui.components.basic.content.ContentListScreen
+import org.six.series.ui.components.basic.content.FavoritesScreen
 import org.six.series.ui.components.basic.content.SearchContentScreen
 import org.six.series.ui.components.basic.genre.GenreDetailScreen
 import org.six.series.ui.components.basic.genre.GenresGrid
+import org.six.series.ui.components.screens.DetailScreen
 import org.six.series.ui.components.screens.ProfileScreen
 import org.six.series.ui.components.screens.SubscriptionScreen
 import org.six.series.ui.components.screens.VideoPlayerScreen
+import org.six.series.ui.components.viewmodels.DetailViewModel
 import org.six.series.ui.components.viewmodels.MainPageViewModel
+import org.six.series.ui.components.viewmodels.MainUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +53,12 @@ fun MainScreen(rootNavController: NavController) {
             getContentUseCase = getKoin().get(),
             getGenresUseCase = getKoin().get(),
             getContentByGenreUseCase = getKoin().get(),
+            addFavoriteUseCase = getKoin().get(),
+            removeFavoriteUseCase = getKoin().get(),
+            getMyFavoritesUseCase = getKoin().get(),
+            saveHistoryUseCase = getKoin().get(),
+            getHistoryUseCase = getKoin().get(),
+            settings = getKoin().get()
         )
     }
 
@@ -83,44 +93,51 @@ fun MainScreen(rootNavController: NavController) {
                 }
 
                 composable(MainRoutes.Movies) {
-                    PlaceholderScreen("Pantalla de Películas")
+                    ContentListScreen(
+                        title = "Películas",
+                        items = viewModel.moviesList,
+                        isLoading = viewModel.uiState is MainUiState.Loading,
+                        onItemClick = { content ->
+                            selectedContent = content
+                            internalNavController.navigate(MainRoutes.Detail)
+                        }
+                    )
                 }
 
                 composable(MainRoutes.Series) {
-                    PlaceholderScreen("Pantalla de Series")
+                    ContentListScreen(
+                        title = "Series",
+                        items = viewModel.seriesList,
+                        isLoading = viewModel.uiState is MainUiState.Loading,
+                        onItemClick = { content ->
+                            selectedContent = content
+                            internalNavController.navigate(MainRoutes.Detail)
+                        }
+                    )
                 }
 
                 composable(MainRoutes.Search) {
-                    LaunchedEffect(Unit) {
-                        viewModel.clearSearchSelection()
-                    }
-
+                    LaunchedEffect(Unit) { viewModel.clearSearchSelection() }
                     SearchContentScreen(
                         searchQuery = viewModel.searchQuery,
                         searchResults = viewModel.searchResults,
                         isSearching = viewModel.isSearching,
-                        onQueryChange = { updatedQuery ->
-                            viewModel.updateSearchQuery(updatedQuery)
-                        },
-                        onMovieClick = { selectedMovie ->
-                            contentToPlay = selectedMovie
-                        }
+                        onQueryChange = { viewModel.updateSearchQuery(it) },
+                        onMovieClick = { contentToPlay = it }
                     )
                 }
-                composable(MainRoutes.Genres) {
 
+                composable(MainRoutes.Genres) {
                     LaunchedEffect(Unit) {
                         selectedGenreName = null
                         viewModel.clearGenreSelection()
                     }
-
                     GenresGrid(
                         state = viewModel.uiState,
                         onGenreClick = { genreName ->
                             selectedGenreName = genreName
                             viewModel.onGenreSelected(genreName)
                             internalNavController.navigate("genres_detail") {
-                                // Evita duplicar la pantalla en la pila si pulsas varias veces
                                 launchSingleTop = true
                             }
                         }
@@ -129,23 +146,20 @@ fun MainScreen(rootNavController: NavController) {
 
                 composable("genres_detail") {
                     val genreName = selectedGenreName ?: return@composable
-
                     GenreDetailScreen(
                         genreName = genreName,
                         content = viewModel.moviesByGenreResult,
                         isLoading = viewModel.isLoadingGenreContent,
                         errorMessage = viewModel.genreContentError,
-                        onMovieClick = { selectedMovie ->
-                            selectedContent = selectedMovie
+                        onMovieClick = { content ->
+                            selectedContent = content
                             internalNavController.navigate(MainRoutes.Detail)
                         },
                         onBackClick = {
                             selectedGenreName = null
                             viewModel.clearGenreSelection()
                             internalNavController.navigate(MainRoutes.Genres) {
-                                popUpTo(MainRoutes.Principal) {
-                                    saveState = false
-                                }
+                                popUpTo(MainRoutes.Principal) { saveState = false }
                                 launchSingleTop = true
                                 restoreState = false
                             }
@@ -153,23 +167,35 @@ fun MainScreen(rootNavController: NavController) {
                     )
                 }
 
-                composable(MainRoutes.Profile) {
-                    ProfileScreen()
+                composable(MainRoutes.Favorites) {
+                    FavoritesScreen(
+                        favorites = viewModel.favorites,
+                        favoritesLoading = viewModel.favoritesLoading,
+                        recentlyWatched = viewModel.recentlyWatched,
+                        recentlyWatchedLoading = false,
+                        onItemClick = { content ->
+                            selectedContent = content
+                            internalNavController.navigate(MainRoutes.Detail)
+                        },
+                        onRemoveFavorite = { content ->
+                            viewModel.toggleFavorite(content)
+                        }
+                    )
                 }
 
-                composable(MainRoutes.Subscription) {
-                    SubscriptionScreen()
-                }
+                composable(MainRoutes.Profile) { ProfileScreen() }
+                composable(MainRoutes.Subscription) { SubscriptionScreen() }
 
                 composable(MainRoutes.Detail) {
                     val content = selectedContent ?: return@composable
                     val detailViewModel: DetailViewModel = koinViewModel()
-
                     DetailScreen(
                         content = content,
                         viewModel = detailViewModel,
+                        isFavorite = viewModel.isFavorite(content.id),
+                        onToggleFavorite = { viewModel.toggleFavorite(content) },
                         onPlayEpisode = { ep ->
-                            contentToPlay = Content(
+                            val c = Content(
                                 id = null,
                                 title = ep.title,
                                 description = ep.description ?: "",
@@ -177,8 +203,13 @@ fun MainScreen(rootNavController: NavController) {
                                 videoURL = ep.videoUrl,
                                 type = ContentType.Series
                             )
+                            viewModel.markAsWatched(content)
+                            contentToPlay = c
                         },
-                        onPlayMovie = { contentToPlay = it }
+                        onPlayMovie = { c ->
+                            viewModel.markAsWatched(c)
+                            contentToPlay = c
+                        }
                     )
                 }
             }

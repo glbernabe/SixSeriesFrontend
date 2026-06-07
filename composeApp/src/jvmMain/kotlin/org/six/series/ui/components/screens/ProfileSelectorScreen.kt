@@ -110,7 +110,8 @@ fun ProfileSelectorScreen(
             }
 
             else -> {
-                val profiles = if (state is ProfileUiState.Success) listOf(state.profile) else emptyList()
+                val profiles =
+                    if (state is ProfileUiState.Success) listOf(state.profile) else emptyList()
 
                 val totalItems = if (isSuperuser) {
                     profiles.size
@@ -227,8 +228,19 @@ fun ProfileSelectorScreen(
         AlertDialog(
             onDismissRequest = { viewModel.dismissSubscriptionAlert() },
             containerColor = Color(0xFF1A1A1A),
-            title = { Text("Suscripción requerida", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
-            text = { Text("Debes de suscribirte a uno de nuestros planes para poder acceder y ver el contenido.", color = Color(0xFFE6E1E5)) },
+            title = {
+                Text(
+                    "Suscripción requerida",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Debes de suscribirte a uno de nuestros planes para poder acceder y ver el contenido.",
+                    color = Color(0xFFE6E1E5)
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -239,7 +251,12 @@ fun ProfileSelectorScreen(
                 ) { Text("Ver planes") }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.dismissSubscriptionAlert() }) { Text("Cancelar", color = Color(0xFF888888)) }
+                TextButton(onClick = { viewModel.dismissSubscriptionAlert() }) {
+                    Text(
+                        "Cancelar",
+                        color = Color(0xFF888888)
+                    )
+                }
             }
         )
     }
@@ -253,7 +270,9 @@ private fun ProfileCard(profile: Profile, onClick: () -> Unit) {
             try {
                 val colorLong = hex.removePrefix("#").toLong(16) or 0xFF000000L
                 Color(colorLong)
-            } catch (e: Exception) { null }
+            } catch (e: Exception) {
+                null
+            }
         }
     } ?: primaryColor
 

@@ -30,11 +30,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val BgDeep      = Color(0xFF0A0A0A)
-private val BgCard      = Color(0xFF161616)
-private val BorderIdle  = Color(0xFF2A2A2A)
+private val BgDeep = Color(0xFF0A0A0A)
+private val BgCard = Color(0xFF161616)
+private val BorderIdle = Color(0xFF2A2A2A)
 private val TextPrimary = Color(0xFFEEEEEE)
-private val TextMuted   = Color(0xFF888888)
+private val TextMuted = Color(0xFF888888)
 
 @Composable
 fun RegisterComponent(
@@ -231,7 +231,9 @@ fun RegisterComponent(
                                     containerColor = primaryColor,
                                     contentColor = MaterialTheme.colorScheme.onPrimary,
                                     disabledContainerColor = primaryColor.copy(alpha = 0.35f),
-                                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(
+                                        alpha = 0.5f
+                                    )
                                 )
                             ) {
                                 Text(

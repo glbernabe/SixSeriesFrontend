@@ -40,8 +40,8 @@ fun ContentCard(
     ) {
         Column(
             modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp),
+                .fillMaxSize()
+                .padding(8.dp),
             verticalArrangement = Arrangement.Center,
         )
         {
@@ -67,8 +67,7 @@ fun ContentCard(
                 modifier = Modifier
                     .weight(1f)
                     .padding(12.dp)
-                    .fillMaxWidth()
-                ,
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

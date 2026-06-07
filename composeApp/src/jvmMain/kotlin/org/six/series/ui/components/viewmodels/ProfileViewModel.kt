@@ -58,7 +58,11 @@ class ProfileViewModel(
                 .onFailure { exception ->
                     val errorMessage = exception.message ?: ""
                     // Check if the validation error matches subscription parameters
-                    if (errorMessage.contains("subscription", ignoreCase = true) || errorMessage.contains("subscripción", ignoreCase = true)) {
+                    if (errorMessage.contains(
+                            "subscription",
+                            ignoreCase = true
+                        ) || errorMessage.contains("subscripción", ignoreCase = true)
+                    ) {
                         _uiState.value = ProfileUiState.NoProfile
                         _showSubscriptionAlert.value = true
                     } else {
@@ -77,7 +81,8 @@ class ProfileViewModel(
         }
 
         viewModelScope.launch {
-            val hexColor = "#" + (newColorLong and 0xFFFFFF).toString(16).padStart(6, '0').uppercase()
+            val hexColor =
+                "#" + (newColorLong and 0xFFFFFF).toString(16).padStart(6, '0').uppercase()
 
             updateProfileUseCase(
                 state.profile.id,
@@ -104,7 +109,11 @@ class ProfileViewModel(
                     _uiState.value = ProfileUiState.NoProfile
 
                     val errorMessage = exception.message ?: ""
-                    if (errorMessage.contains("subscription", ignoreCase = true) || errorMessage.contains("subscripción", ignoreCase = true)) {
+                    if (errorMessage.contains(
+                            "subscription",
+                            ignoreCase = true
+                        ) || errorMessage.contains("subscripción", ignoreCase = true)
+                    ) {
                         _showSubscriptionAlert.value = true
                     } else {
                         _uiState.value = ProfileUiState.Error("Error al crear el perfil")
@@ -124,5 +133,7 @@ class ProfileViewModel(
         _showSubscriptionAlert.value = false
     }
 
-    fun dismissSaveMessage() { _saveSuccess.value = null }
+    fun dismissSaveMessage() {
+        _saveSuccess.value = null
+    }
 }

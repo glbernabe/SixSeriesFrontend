@@ -84,6 +84,7 @@ fun App() {
                                     appViewModel.setColorFromProfile(colorLong)
                                 } catch (e: Exception) { }
                             }
+                            appViewModel.saveProfileName(profile.name)
                             navController.navigate(AppRoute.Main) {
                                 popUpTo(AppRoute.ProfileSelector) { inclusive = true }
                             }

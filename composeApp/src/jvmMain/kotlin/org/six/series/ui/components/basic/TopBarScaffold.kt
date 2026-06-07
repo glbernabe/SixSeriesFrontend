@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -54,7 +55,6 @@ import sixseries.composeapp.generated.resources.ic_magnifying_Glass
 import sixseries.composeapp.generated.resources.ic_user_Circle_Single
 
 
-// ALL THE ICONS FOR THE UI ON THE TOP BAR
 val navItems = listOf(
     NavigationItem(null, MainRoutes.Principal, "Inicio"),
     NavigationItem(null, MainRoutes.Movies, "Películas"),
@@ -186,65 +186,69 @@ fun AdaptiveTopBar(
                                 )
                             }
                         }
-
-                        if (item.icon != null && !item.label.isNullOrEmpty()) {
-                            Spacer(Modifier.width(8.dp))
-                        }
-
-                        if (!item.label.isNullOrEmpty()) {
-                            Text(
-                                text = item.label,
-                                style = itemTextStyle
-                            )
+                        if (item.label != null && item.icon == null) {
+                            Text(text = item.label, style = itemTextStyle)
                         }
                     }
+                }
+            }
 
-                    if (item.icon == Res.drawable.ic_user_Circle_Single && showUserMenu) {
-                        val userData = remember(showUserMenu) { tokenStorage.getUserData() }
 
-                        DropdownMenu(
-                            expanded = showUserMenu,
-                            onDismissRequest = { showUserMenu = false },
-                            offset = DpOffset(0.dp, 8.dp),
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(8.dp),
-                            tonalElevation = 0.dp,
-                            shadowElevation = 8.dp,
-                            modifier = Modifier.background(Color.Transparent)
-                        ) {
-                            DisplayPanelOptions(
-                                userData = userData,
-                                backgroundColor = Color.Transparent,
-                                elevation = 0.dp,
-                                onChangeProfileClick = {
-                                    showUserMenu = false
-                                    rootNavController.navigate(AppRoute.ProfileSelector) {
-                                        popUpTo(AppRoute.Main) { inclusive = true }
-                                    }
-                                },
-                                onAccountSettingsClick = {
-                                    showUserMenu = false
-                                    navController.navigate(MainRoutes.Profile) { popUpTo(0) }
-                                },
-                                onSignOutClick = {
-                                    showUserMenu = false
-                                    scope.launch {
-                                        logoutUseCase.logout()
-                                            .onSuccess {
-                                                errorMessage = "Sesión cerrada correctamente"
-                                                profileViewModel.clearState()
-                                                subscriptionViewModel.clearState()
-                                                rootNavController.navigate(AppRoute.Login) {
-                                                    popUpTo(0) { inclusive = true }
-                                                }
-                                            }
-                                            .onFailure {
-                                                errorMessage = "Error al intentar cerrar sesión"
-                                            }
-                                    }
+            val userData by tokenStorage.userDataFlow.collectAsState()
+            if (showUserMenu) {
+                Box(modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.TopEnd)) {
+                    DropdownMenu(
+                        expanded = showUserMenu,
+                        onDismissRequest = { showUserMenu = false },
+                        offset = DpOffset(x = (-8).dp, y = 4.dp),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(8.dp),
+                        tonalElevation = 0.dp,
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.background(Color.Transparent)
+                    ) {
+                        DisplayPanelOptions(
+                            userData = userData,
+                            backgroundColor = Color.Transparent,
+                            elevation = 0.dp,
+                            onChangeProfileClick = {
+                                showUserMenu = false
+                                rootNavController.navigate(AppRoute.ProfileSelector) {
+                                    popUpTo(AppRoute.Main) { inclusive = true }
                                 }
-                            )
-                        }
+                            },
+                            onAccountSettingsClick = {
+                                showUserMenu = false
+                                navController.navigate(MainRoutes.Profile) { popUpTo(0) }
+                            },
+                            // ── NUEVO: navega a Favoritos / Seguir viendo ──
+                            onMyListsClick = {
+                                showUserMenu = false
+                                navController.navigate(MainRoutes.Favorites) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = false
+                                    }
+                                    launchSingleTop = true
+                                }
+                            },
+                            onSignOutClick = {
+                                showUserMenu = false
+                                scope.launch {
+                                    logoutUseCase.logout()
+                                        .onSuccess {
+                                            errorMessage = "Sesión cerrada correctamente"
+                                            profileViewModel.clearState()
+                                            subscriptionViewModel.clearState()
+                                            rootNavController.navigate(AppRoute.Login) {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                        }
+                                        .onFailure {
+                                            errorMessage = "Error al intentar cerrar sesión"
+                                        }
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -273,6 +277,7 @@ fun DisplayPanelOptions(
     elevation: Dp = 0.dp,
     onChangeProfileClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
+    onMyListsClick: () -> Unit,
     onSignOutClick: () -> Unit
 ) {
     Surface(
@@ -287,7 +292,6 @@ fun DisplayPanelOptions(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.98f)),
         ) {
-            // Left Column: Streaming Options Navigation
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -303,7 +307,7 @@ fun DisplayPanelOptions(
                 )
 
                 StreamingOptionItem(icon = Icons.Default.AccountCircle, label = "Perfiles") { onChangeProfileClick() }
-                StreamingOptionItem(icon = Icons.Default.List, label = "Mis Listas") { }
+                StreamingOptionItem(icon = Icons.Default.Favorite, label = "Mis Listas") { onMyListsClick() }
                 StreamingOptionItem(icon = Icons.Default.Settings, label = "Ajustes") { onAccountSettingsClick() }
                 StreamingOptionItem(icon = Icons.Default.ExitToApp, label = "Cerrar Sesión") { onSignOutClick() }
             }
@@ -312,13 +316,10 @@ fun DisplayPanelOptions(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(2.dp)
-                    .border(
-                        width = 3.dp,
-                        color = Color.Black.copy(alpha = 0.5f),
-                    )
+                    .border(width = 3.dp, color = Color.Black.copy(alpha = 0.5f))
             ) { }
 
-            // Right Column: Active Profile Context Preview
+            // Columna derecha: info usuario
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -334,13 +335,11 @@ fun DisplayPanelOptions(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-
                 Text(
                     text = userData?.username ?: "Guest",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
-
                 Text(
                     text = when (userData?.role) {
                         "superuser" -> "Administrador"

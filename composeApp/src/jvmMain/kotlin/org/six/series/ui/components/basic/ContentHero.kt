@@ -1,13 +1,25 @@
 package org.six.series.ui.components.basic
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
@@ -27,7 +39,9 @@ import sixseries.composeapp.generated.resources.logo_sixSeries
 @Composable
 fun ContentHero(
     content: Content,
-    onPlay: () -> Unit
+    onPlay: () -> Unit,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {}
 ) {
     val itemTextStyle = TextStyle(
         fontSize = 20.sp,
@@ -40,6 +54,20 @@ fun ContentHero(
         )
     )
 
+    val heartColor by animateColorAsState(
+        targetValue = if (isFavorite) Color(0xFFE53935) else Color.White.copy(alpha = 0.85f),
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "heartColor"
+    )
+    val heartScale by animateFloatAsState(
+        targetValue = if (isFavorite) 1.2f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "heartScale"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,7 +75,6 @@ fun ContentHero(
             .background(Color.Black),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Panel izquierdo — info
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -118,22 +145,60 @@ fun ContentHero(
                         .padding(vertical = 30.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Button(
-                        modifier = Modifier.height(60.dp),
-                        onClick = onPlay,
-                        colors = profileButtonColors()
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            modifier = Modifier.padding(3.dp),
-                            text = "Ver Ahora",
-                            style = itemTextStyle
-                        )
+                        Button(
+                            modifier = Modifier.height(60.dp),
+                            onClick = onPlay,
+                            colors = profileButtonColors()
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(3.dp),
+                                text = "Ver Ahora",
+                                style = itemTextStyle
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .background(
+                                    color = if (isFavorite)
+                                        Color(0xFFE53935).copy(alpha = 0.18f)
+                                    else
+                                        Color.White.copy(alpha = 0.08f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            IconButton(
+                                onClick = onToggleFavorite,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Icon(
+                                    imageVector = if (isFavorite)
+                                        Icons.Filled.Favorite
+                                    else
+                                        Icons.Outlined.FavoriteBorder,
+                                    contentDescription = if (isFavorite)
+                                        "Quitar de favoritos"
+                                    else
+                                        "Añadir a favoritos",
+                                    tint = heartColor,
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .scale(heartScale)
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Panel derecho — poster
+
         Box(modifier = Modifier.weight(2f)) {
             AsyncImage(
                 model = content.coverURL,

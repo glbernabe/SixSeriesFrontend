@@ -45,14 +45,14 @@ import org.six.series.ui.components.viewmodels.ProfileViewModel
 data class ColorOption(val name: String, val color: Color, val hexLong: Long)
 
 val profileColorPalette = listOf(
-    ColorOption("Gris",     Color(0xFF6A6A69), 0xFF6A6A69L),
-    ColorOption("Rosa",     Color(0xFFE2A9F1), 0xFFE2A9F1L),
-    ColorOption("Rojo",     Color(0xFFFF3131), 0xFFFF3131L),
-    ColorOption("Azul",     Color(0xFF004AAD), 0xFF004AADL),
-    ColorOption("Morado",   Color(0xFFCE16FF), 0xFFCE16FFL),
-    ColorOption("Negro",    Color(0xFF1A1A1A), 0xFF1A1A1AL),
+    ColorOption("Gris", Color(0xFF6A6A69), 0xFF6A6A69L),
+    ColorOption("Rosa", Color(0xFFE2A9F1), 0xFFE2A9F1L),
+    ColorOption("Rojo", Color(0xFFFF3131), 0xFFFF3131L),
+    ColorOption("Azul", Color(0xFF004AAD), 0xFF004AADL),
+    ColorOption("Morado", Color(0xFFCE16FF), 0xFFCE16FFL),
+    ColorOption("Negro", Color(0xFF1A1A1A), 0xFF1A1A1AL),
     ColorOption("Amarillo", Color(0xFFFFDE59), 0xFFFFDE59L),
-    ColorOption("Verde",    Color(0xFF7ED957), 0xFF7ED957L),
+    ColorOption("Verde", Color(0xFF7ED957), 0xFF7ED957L),
 )
 
 @Composable
@@ -113,6 +113,7 @@ fun ProfileScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
+
             is ProfileUiState.NoProfile -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
@@ -120,8 +121,12 @@ fun ProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.padding(32.dp)
                     ) {
-                        Text("No tienes ningún perfil aún", fontSize = 18.sp, fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE6E1E5))
+                        Text(
+                            "No tienes ningún perfil aún",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE6E1E5)
+                        )
                         var nombre by remember { mutableStateOf("") }
                         OutlinedTextField(
                             value = nombre,
@@ -137,6 +142,7 @@ fun ProfileScreen(
                     }
                 }
             }
+
             is ProfileUiState.Success -> {
                 Column(
                     modifier = Modifier
@@ -168,7 +174,12 @@ fun ProfileScreen(
                             modifier = Modifier.padding(24.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text("Nombre del perfil", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color(0xFFE6E1E5))
+                            Text(
+                                "Nombre del perfil",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = Color(0xFFE6E1E5)
+                            )
 
                             OutlinedTextField(
                                 value = nameField,
@@ -202,8 +213,12 @@ fun ProfileScreen(
                             modifier = Modifier.padding(24.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text("Color del perfil", fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
-                                color = Color(0xFFE6E1E5))
+                            Text(
+                                "Color del perfil",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = Color(0xFFE6E1E5)
+                            )
                             Text(
                                 "El color que elijas teñirá toda la interfaz de la app",
                                 fontSize = 18.sp,
@@ -236,12 +251,17 @@ fun ProfileScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("Vista previa:", fontSize = 13.sp,
-                                    color = Color(0xFFE6E1E5))
+                                Text(
+                                    "Vista previa:", fontSize = 13.sp,
+                                    color = Color(0xFFE6E1E5)
+                                )
                                 Box(
                                     modifier = Modifier
                                         .height(28.dp)
-                                        .background(currentPreviewColor, RoundedCornerShape(14.dp)) // Este sigue cambiando para mostrar la vista previa
+                                        .background(
+                                            currentPreviewColor,
+                                            RoundedCornerShape(14.dp)
+                                        ) // Este sigue cambiando para mostrar la vista previa
                                         .padding(horizontal = 16.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -273,9 +293,15 @@ fun ProfileScreen(
             is ProfileUiState.Error -> {
                 val msg = (uiState as ProfileUiState.Error).message
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         Text(msg, color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { viewModel.loadProfile() }, colors = profileButtonColors()) {
+                        Button(
+                            onClick = { viewModel.loadProfile() },
+                            colors = profileButtonColors()
+                        ) {
                             Text("Reintentar")
                         }
                     }

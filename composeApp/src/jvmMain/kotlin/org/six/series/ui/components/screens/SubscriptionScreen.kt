@@ -62,6 +62,7 @@ fun SubscriptionScreen(
                     CircularProgressIndicator(color = primaryColor)
                 }
             }
+
             is SubscriptionUiState.Error -> {
                 val msg = (uiState as SubscriptionUiState.Error).message
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -76,6 +77,7 @@ fun SubscriptionScreen(
                     }
                 }
             }
+
             is SubscriptionUiState.Success -> {
                 val data = uiState as SubscriptionUiState.Success
                 Column(
@@ -133,7 +135,7 @@ fun SubscriptionScreen(
                                 onSubscribeYearly = {
                                     val yearlyType = when (plan.type) {
                                         SubscriptionType.Standard -> SubscriptionType.StandardYearly
-                                        SubscriptionType.Premium  -> SubscriptionType.PremiumYearly
+                                        SubscriptionType.Premium -> SubscriptionType.PremiumYearly
                                         else -> plan.type
                                     }
                                     viewModel.requestSubscription(yearlyType)
@@ -182,7 +184,10 @@ fun CurrentSubscriptionCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             Text(
                 "Estado actual",
                 fontWeight = FontWeight.SemiBold,
@@ -193,13 +198,13 @@ fun CurrentSubscriptionCard(
                 Text("Sin suscripción activa", color = Color(0xFFCAC4D0))
             } else {
                 val statusColor = when (subscription.status) {
-                    SubscriptionStatus.Active  -> Color(0xFF4CAF50)
+                    SubscriptionStatus.Active -> Color(0xFF4CAF50)
                     SubscriptionStatus.Pending -> Color(0xFFFFC107)
                     SubscriptionStatus.Expired -> MaterialTheme.colorScheme.error
                     null -> Color.Gray
                 }
                 val statusLabel = when (subscription.status) {
-                    SubscriptionStatus.Active  -> "Activa"
+                    SubscriptionStatus.Active -> "Activa"
                     SubscriptionStatus.Pending -> "Pendiente"
                     SubscriptionStatus.Expired -> "Expirada"
                     null -> "Desconocido"
@@ -216,10 +221,10 @@ fun CurrentSubscriptionCard(
                     Text(statusLabel, color = statusColor, fontWeight = FontWeight.Bold)
                 }
                 val planName = when (subscription.type) {
-                    SubscriptionType.Standard       -> "Estándar Mensual"
-                    SubscriptionType.Premium        -> "Premium Mensual"
+                    SubscriptionType.Standard -> "Estándar Mensual"
+                    SubscriptionType.Premium -> "Premium Mensual"
                     SubscriptionType.StandardYearly -> "Estándar Anual"
-                    SubscriptionType.PremiumYearly  -> "Premium Anual"
+                    SubscriptionType.PremiumYearly -> "Premium Anual"
                     SubscriptionType.AdminLife -> "Administrativa"
                 }
                 Text("Plan: $planName", color = Color(0xFFE6E1E5))
@@ -272,10 +277,12 @@ fun PlanCard(
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    val monthlyType = if (displayName == "Estándar") SubscriptionType.Standard else SubscriptionType.Premium
-    val yearlyType  = if (displayName == "Estándar") SubscriptionType.StandardYearly else SubscriptionType.PremiumYearly
+    val monthlyType =
+        if (displayName == "Estándar") SubscriptionType.Standard else SubscriptionType.Premium
+    val yearlyType =
+        if (displayName == "Estándar") SubscriptionType.StandardYearly else SubscriptionType.PremiumYearly
     val isCurrentMonthly = currentType == monthlyType
-    val isCurrentYearly  = currentType == yearlyType
+    val isCurrentYearly = currentType == yearlyType
 
     Card(
         modifier = Modifier
@@ -285,7 +292,10 @@ fun PlanCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Text(displayName, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = primaryColor)
             features.forEach { feature ->
                 Row(
@@ -348,16 +358,16 @@ fun PlanCard(
 fun PaymentHistoryItem(payment: Payment) {
     val statusColor = when (payment.status) {
         PaymentStatus.Completed -> Color(0xFF4CAF50)
-        PaymentStatus.Pending   -> Color(0xFFFFC107)
-        PaymentStatus.Failed    -> MaterialTheme.colorScheme.error
+        PaymentStatus.Pending -> Color(0xFFFFC107)
+        PaymentStatus.Failed -> MaterialTheme.colorScheme.error
     }
     val statusLabel = when (payment.status) {
         PaymentStatus.Completed -> "Completado"
-        PaymentStatus.Pending   -> "Pendiente"
-        PaymentStatus.Failed    -> "Fallido"
+        PaymentStatus.Pending -> "Pendiente"
+        PaymentStatus.Failed -> "Fallido"
     }
     val methodLabel = when (payment.method) {
-        PaymentMethod.Card   -> "💳 Tarjeta"
+        PaymentMethod.Card -> "💳 Tarjeta"
         PaymentMethod.PayPal -> "🅿 PayPal"
     }
     Card(
@@ -374,14 +384,22 @@ fun PaymentHistoryItem(payment: Payment) {
                 Text(payment.paymentDate, fontWeight = FontWeight.Medium, color = Color(0xFFE6E1E5))
                 Text(methodLabel, fontSize = 13.sp, color = Color(0xFFCAC4D0))
             }
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     "${String.format("%.2f", payment.amount)} €",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Color(0xFFE6E1E5)
                 )
-                Text(statusLabel, color = statusColor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    statusLabel,
+                    color = statusColor,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -416,13 +434,17 @@ fun PaymentMethodDialog(
                     color = if (errorMessage != null) MaterialTheme.colorScheme.error else primaryColor
                 )
                 val planLabel = when (subscriptionType) {
-                    SubscriptionType.Standard       -> "Estándar Mensual — 7.99 €"
-                    SubscriptionType.Premium        -> "Premium Mensual — 13.99 €"
+                    SubscriptionType.Standard -> "Estándar Mensual — 7.99 €"
+                    SubscriptionType.Premium -> "Premium Mensual — 13.99 €"
                     SubscriptionType.StandardYearly -> "Estándar Anual — 79.99 €"
-                    SubscriptionType.PremiumYearly  -> "Premium Anual — 139.99 €"
+                    SubscriptionType.PremiumYearly -> "Premium Anual — 139.99 €"
                     SubscriptionType.AdminLife -> "Desarrolladores Only"
                 }
-                Text(planLabel, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    planLabel,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 HorizontalDivider()
 
                 if (errorMessage != null) {
@@ -430,7 +452,10 @@ fun PaymentMethodDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f), RoundedCornerShape(10.dp))
+                            .background(
+                                MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                                RoundedCornerShape(10.dp)
+                            )
                             .padding(14.dp)
                     ) {
                         Text(

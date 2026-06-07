@@ -9,18 +9,23 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.request.ImageRequest
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import org.six.series.application.usecases.content.GetContentUseCase
+import org.six.series.application.usecases.favorite.AddFavoriteUseCase
+import org.six.series.application.usecases.favorite.GetMyFavoritesUseCase
+import org.six.series.application.usecases.favorite.RemoveFavoriteUseCase
 import org.six.series.application.usecases.genre.GetContentByGenreUseCase
 import org.six.series.application.usecases.genre.GetGenresUseCase
+import org.six.series.application.usecases.history.GetHistoryUseCase
+import org.six.series.application.usecases.history.SaveHistoryUseCase
 import org.six.series.model.content.Content
+import org.six.series.model.content.ContentType
 import org.six.series.model.genre.Genre
+import org.six.series.ui.appsettings.AppSettings
 
 sealed class MainUiState {
     object Loading : MainUiState()
-    data class Success(
-        val movies: List<Content>,
-        val genres: List<Genre>
-    ) : MainUiState()
+    data class Success(val movies: List<Content>, val genres: List<Genre>) : MainUiState()
     data class Error(val message: String) : MainUiState()
 }
 
@@ -29,31 +34,42 @@ class MainPageViewModel(
     private val getContentUseCase: GetContentUseCase,
     private val getGenresUseCase: GetGenresUseCase,
     private val getContentByGenreUseCase: GetContentByGenreUseCase,
-    private val imageLoader: ImageLoader
+    private val imageLoader: ImageLoader,
+    private val addFavoriteUseCase: AddFavoriteUseCase,
+    private val removeFavoriteUseCase: RemoveFavoriteUseCase,
+    private val getMyFavoritesUseCase: GetMyFavoritesUseCase,
+    private val saveHistoryUseCase: SaveHistoryUseCase,
+    private val getHistoryUseCase: GetHistoryUseCase,
+    private val settings: AppSettings
 ) : ViewModel() {
 
     var uiState by mutableStateOf<MainUiState>(MainUiState.Loading)
         private set
 
-    // --- Search States ---
     var searchQuery by mutableStateOf("")
         private set
-
     var searchResults by mutableStateOf<List<Content>>(emptyList())
         private set
-
     var isSearching by mutableStateOf(false)
         private set
 
-    // --- Genre Detail States ---
     var moviesByGenreResult by mutableStateOf<List<Content>>(emptyList())
         private set
-
     var isLoadingGenreContent by mutableStateOf(false)
         private set
-
-    // Añadimos este estado para capturar mensajes de error específicos de los géneros
     var genreContentError by mutableStateOf<String?>(null)
+        private set
+
+    var favorites by mutableStateOf<List<Content>>(emptyList())
+        private set
+    var favoritesLoading by mutableStateOf(false)
+        private set
+    var favoriteIds by mutableStateOf<Set<String>>(emptySet())
+        private set
+
+    var recentlyWatched by mutableStateOf<List<Content>>(emptyList())
+        private set
+    var recentlyWatchedLoading by mutableStateOf(false)
         private set
 
     init {
@@ -62,51 +78,69 @@ class MainPageViewModel(
 
     fun loadInitialData() {
         uiState = MainUiState.Loading
-
         viewModelScope.launch {
             val contentDeferred = async { getContentUseCase() }
             val genresDeferred = async { getGenresUseCase() }
+            val favoritesDeferred = async { getMyFavoritesUseCase() }
 
             val contentResult = contentDeferred.await()
             val genresResult = genresDeferred.await()
+            val favoritesResult = favoritesDeferred.await()
 
             if (contentResult.isSuccess) {
-                val movies = contentResult.getOrThrow()
+                val allContent = contentResult.getOrThrow()
                 val genres = genresResult.getOrElse { emptyList() }
-
-                uiState = MainUiState.Success(movies, genres)
-                preloadImages(movies.take(5))
+                uiState = MainUiState.Success(allContent, genres)
+                preloadImages(allContent.take(5))
+                loadHistory(allContent)
             } else {
                 uiState = MainUiState.Error("Error al cargar los datos del servidor")
+            }
+
+            favoritesResult.onSuccess { list ->
+                favorites = list
+                favoriteIds = list.mapNotNull { it.id }.toSet()
             }
         }
     }
 
+    private suspend fun loadHistory(allContent: List<Content>) {
+        val profileName = settings.profileName.first() ?: return
+        recentlyWatchedLoading = true
+        getHistoryUseCase(profileName).onSuccess { historyList ->
+            recentlyWatched = historyList.mapNotNull { h ->
+                allContent.find { it.title == h.title }
+            }
+        }
+        recentlyWatchedLoading = false
+    }
+
+    val seriesList: List<Content>
+        get() = (uiState as? MainUiState.Success)
+            ?.movies?.filter { it.type == ContentType.Series } ?: emptyList()
+
+    val moviesList: List<Content>
+        get() = (uiState as? MainUiState.Success)
+            ?.movies?.filter { it.type == ContentType.Movie } ?: emptyList()
+
+    val documentariesList: List<Content>
+        get() = (uiState as? MainUiState.Success)
+            ?.movies?.filter { it.type == ContentType.Documentary } ?: emptyList()
+
     fun updateSearchQuery(query: String) {
         searchQuery = query
-        if (query.isBlank()) {
-            searchResults = emptyList()
-        } else {
-            performSearch()
-        }
+        if (query.isBlank()) searchResults = emptyList() else performSearch()
     }
 
     fun performSearch() {
         if (searchQuery.isBlank()) return
-
-        uiState.let { currentStatus ->
-            if (currentStatus is MainUiState.Success) {
-                viewModelScope.launch {
-                    isSearching = true
-
-                    val filtered = currentStatus.movies.filter { content ->
-                        content.title.contains(searchQuery, ignoreCase = true)
-                    }
-
-                    searchResults = filtered
-                    isSearching = false
-                }
+        val currentStatus = uiState as? MainUiState.Success ?: return
+        viewModelScope.launch {
+            isSearching = true
+            searchResults = currentStatus.movies.filter {
+                it.title.contains(searchQuery, ignoreCase = true)
             }
+            isSearching = false
         }
     }
 
@@ -114,45 +148,64 @@ class MainPageViewModel(
         updateSearchQuery("")
     }
 
-    private fun preloadImages(movies: List<Content>) {
-        movies.forEach { movie ->
-            val urls = listOfNotNull(movie.coverURL, movie.logoURL, movie.portraitURL)
-            urls.forEach { imageUrl ->
-                viewModelScope.launch(Dispatchers.IO) {
-                    val request = ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .build()
-                    imageLoader.execute(request)
-                }
-            }
-        }
-    }
-
-    // --- Genre Functions ---
     fun onGenreSelected(genreName: String) {
         viewModelScope.launch {
             isLoadingGenreContent = true
-            genreContentError = null // Reseteamos errores previos antes de iniciar la petición
-
+            genreContentError = null
             val result = getContentByGenreUseCase(genreName)
-
             if (result.isSuccess) {
                 moviesByGenreResult = result.getOrThrow()
-                if (moviesByGenreResult.isEmpty()) {
+                if (moviesByGenreResult.isEmpty())
                     genreContentError = "No se encontraron contenidos para el género: $genreName"
-                }
             } else {
                 moviesByGenreResult = emptyList()
-                genreContentError = result.exceptionOrNull()?.message ?: "Error al conectar con el servidor"
+                genreContentError =
+                    result.exceptionOrNull()?.message ?: "Error al conectar con el servidor"
             }
             isLoadingGenreContent = false
         }
     }
 
-    // Función crucial para limpiar el estado de la búsqueda al salir de la pantalla
     fun clearGenreSelection() {
         moviesByGenreResult = emptyList()
         isLoadingGenreContent = false
         genreContentError = null
+    }
+
+    fun isFavorite(contentId: String?): Boolean = contentId != null && contentId in favoriteIds
+
+    fun toggleFavorite(content: Content) {
+        val id = content.id ?: return
+        viewModelScope.launch {
+            if (isFavorite(id)) {
+                removeFavoriteUseCase(content.title).onSuccess {
+                    favoriteIds = favoriteIds - id
+                    favorites = favorites.filter { it.id != id }
+                }
+            } else {
+                addFavoriteUseCase(content.title).onSuccess {
+                    favoriteIds = favoriteIds + id
+                    favorites = favorites + content
+                }
+            }
+        }
+    }
+
+    fun markAsWatched(content: Content) {
+        viewModelScope.launch {
+            val profileName = settings.profileName.first() ?: return@launch
+            saveHistoryUseCase(profileName, content.title, 0)
+            recentlyWatched = listOf(content) + recentlyWatched.filter { it.id != content.id }
+        }
+    }
+
+    private fun preloadImages(movies: List<Content>) {
+        movies.forEach { movie ->
+            listOfNotNull(movie.coverURL, movie.logoURL, movie.portraitURL).forEach { url ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    imageLoader.execute(ImageRequest.Builder(context).data(url).build())
+                }
+            }
+        }
     }
 }
