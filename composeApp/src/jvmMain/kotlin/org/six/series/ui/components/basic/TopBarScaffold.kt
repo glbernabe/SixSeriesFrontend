@@ -221,7 +221,7 @@ fun AdaptiveTopBar(
                                 showUserMenu = false
                                 navController.navigate(MainRoutes.Profile) { popUpTo(0) }
                             },
-                            // ── NUEVO: navega a Favoritos / Seguir viendo ──
+
                             onMyListsClick = {
                                 showUserMenu = false
                                 navController.navigate(MainRoutes.Favorites) {
