@@ -21,23 +21,20 @@ class AppSettings(databasePath: String) {
         const val DEFAULT_COLOR = 0xFF6A6A69L
     }
 
-    // ── Color ──
     val currentHexColor: Flow<Long> = dataStore.data
         .map { it[THEME_COLOR_KEY] ?: DEFAULT_COLOR }
 
     suspend fun updateColor(newColor: Long) {
         dataStore.edit { it[THEME_COLOR_KEY] = newColor }
     }
-
-    // ── Avatar URL (local cache) ──
+    /*
     val avatarUrl: Flow<String?> = dataStore.data
         .map { it[AVATAR_URL_KEY] }
 
     suspend fun updateAvatarUrl(url: String) {
         dataStore.edit { it[AVATAR_URL_KEY] = url }
     }
-
-    // ── Profile name (local cache) ──
+*/
     val profileName: Flow<String?> = dataStore.data
         .map { it[PROFILE_NAME_KEY] }
 

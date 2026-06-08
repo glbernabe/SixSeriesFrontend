@@ -29,13 +29,13 @@ class AppViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = AppSettings.DEFAULT_COLOR
     )
-
+/*
     val activeProfileName = settings.profileName.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
-
+*/
     fun updateAppColor(colorHex: Long) {
         viewModelScope.launch {
             settings.updateColor(colorHex)

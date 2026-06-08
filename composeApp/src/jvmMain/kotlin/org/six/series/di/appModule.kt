@@ -73,12 +73,12 @@ val appModulo = module {
     // ── Token Storage ──
     single { TokenStorage(get()) }
 
-    // ── HTTP Client (with auto-refresh) ──
+    // ── HTTP Client ──
     single {
         createHttpClient(get(), "$url/users/refresh/")
     }
 
-    // ── App Settings (theme color DataStore) ──
+    // ── App Settings ──
     single {
         AppSettings(databasePath = "app_settings.preferences_pb")
     }
